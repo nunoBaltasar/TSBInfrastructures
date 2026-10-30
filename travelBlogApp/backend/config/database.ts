@@ -8,10 +8,8 @@ const config = ({
     connection: {
       client: 'sqlite',
       connection: {
-        filename: path.join(
-          __dirname,
-          '..',
-          '..',
+        filename: path.resolve(
+          process.cwd(),
           env('DATABASE_FILENAME', '.tmp/data.db')
         ),
       },

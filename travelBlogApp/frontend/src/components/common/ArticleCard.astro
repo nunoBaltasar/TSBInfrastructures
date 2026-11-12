@@ -1,0 +1,135 @@
+---
+interface Props{
+    title:string;
+    description: string;
+    image: string;
+    slug: string;
+    author: string;
+    publishedAt?: string;
+}
+
+const {
+    title,
+    description,
+    image,
+    slug,
+    author,
+    publishedAt,
+} = Astro.props as Props;
+---
+
+
+<article class = "articleCard">
+    <img
+      src={image}
+      alt={`Article image for ${title}`}
+      class="articleImage"
+    />
+    <div class="articleContent">
+        <h2>{title}</h2>
+
+        <p class="articleDescription">{description}</p>
+
+        <a class="readMore" href={`/articles/${slug}`}>
+        Read article
+        </a>
+    </div>
+</article>
+
+
+
+
+<style>
+
+  .articleCard {
+    position: relative;
+    overflow: hidden;
+    background-color: #000;
+    border-radius: 4px;
+  }
+
+
+  .articleCard::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 230px;
+    z-index: 1;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 60%,
+        rgba(0, 0, 0, 1) 100%
+    );
+    pointer-events: none;
+  }
+
+  .articleImage {
+    position: relative;
+    z-index: 0;
+    display: block;
+    width: 100%;
+    height: 230px;
+    object-fit: cover;
+  }
+
+  .articleContent {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .articleContent h2 {
+    margin: 0 0 12px;
+    font-size: 42px;
+    color: #ffffff;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+
+  .articleImage {
+      padding: 0;
+      border: none;
+      outline: none;
+      box-shadow: none;
+  }
+
+  .articleDescription {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0 10px;
+    height: calc(1.7em * 4);
+    overflow: hidden;
+    font-size: 18px;
+    text-align: justify;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+  }
+
+  .readMore {
+    color: #000;
+    font-size: 42px;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    background-color: #ffffff;
+    border: 1px solid transparent;
+  }
+
+  .readMore:hover {
+    transition: background-color 0.3s ease;
+    background-color: #000;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+  }
+
+
+</style>

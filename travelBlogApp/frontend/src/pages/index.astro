@@ -1,0 +1,109 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import headerImage from '../assets/header.png';
+import fetchApi from '../lib/strapi';
+import type {
+  Author,
+  Article,
+  GalleryImage,
+  StrapiCollectionResponse,
+} from '../interfaces/strapi';
+
+
+const authorsResponse = await fetchApi<StrapiCollectionResponse<Author>>(
+  {
+    endpoint: 'authors',
+    query: {
+      'pagination[pageSize]': '1',
+    },
+  },
+);
+const articlesResponse = await fetchApi<StrapiCollectionResponse<Article>>(
+  {
+    endpoint: 'articles',
+    query: {
+      'pagination[pageSize]': '1',
+    },
+  },
+);
+const galleryImagesResponse = await fetchApi<
+  StrapiCollectionResponse<GalleryImage>
+>({
+  endpoint: 'gallery-images',
+  query: {
+    populate: 'image',
+    sort: 'publishedAt:desc',
+    'pagination[pageSize]': '5',
+  },
+});
+
+const totalAuthors = authorsResponse.meta.pagination.total;
+const totalArticles = articlesResponse.meta.pagination.total;
+
+const galleryImages = galleryImagesResponse.data;
+const strapiUrl = import.meta.env.STRAPI_URL;
+const getMediaUrl = (url: string) =>
+  url.startsWith('http') ? url : `${strapiUrl}${url}`;
+---
+
+<BaseLayout title="Travel Blog">
+  <header>
+    <section style = {`background-image: url('${headerImage.src}'); background-size: cover; 
+    background-repeat: no-repeat; background-attachment: fixed; height: 100vh; width: 100%;`}>
+      <div class = "left">
+        <h1>Explore <span>Travel Blog</span></h1>
+        <p>Discover the world through our travel stories and guides.</p>
+        
+        <a href = "#">
+          <i class = 'bx bx-compass'></i>
+          <span> Explore Now </span>
+        </a>
+      </div>
+    </section>
+    <div class = "about">
+      <h2>About <span>Us</span></h2>
+      <div class = "about-us"> 
+        <div class = "about-content">
+          <p>
+            Welcome to TravelBlog, your ultimate destination for travel inspiration and information. 
+            Our team of passionate travelers is dedicated to sharing their experiences, tips, and guides to help you plan your next adventure. 
+            Whether you're a seasoned traveler or just starting out, we have something for everyone. 
+            Join us as we explore the world, one destination at a time.
+          </p>
+        </div>
+        <div class = "about-buttons">
+          <a class = "authors" href = "#">
+            <span>{totalAuthors}</span>
+            <span>Current</span> 
+            <span>Authors</span>
+          </a>
+          <a href = "#">
+            <span>{totalArticles}</span>
+            <span>Total</span> 
+            <span>Articles</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <section class = "galleryShow">
+      <h2>Some of our photos</h2>
+      <div class = "carousel">
+        {galleryImages.map((galleryImage) =>
+        galleryImage.image ? (
+          <a href={`/gallery/${galleryImage.slug}`}>
+            <img
+              src={getMediaUrl(
+                galleryImage.image.formats?.medium?.url ?? galleryImage.image.url
+              )}
+              alt={galleryImage.image.alternativeText ?? galleryImage.title}
+              loading="lazy"
+            />
+          </a>
+          ) : null
+        )}
+      </div>
+    </section>
+  </header>
+</BaseLayout>
+

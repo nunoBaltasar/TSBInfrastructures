@@ -1,0 +1,28 @@
+<header>
+  <nav class = "header">
+    <a href="#" class = "logo">TravelBlog</a> 
+    <div class="links">
+      <a href= "#"> Home </a>
+      <a href= "#"> Articles </a>
+      <a href= "#"> Authors </a>
+      <a href= "#"> Gallery </a>
+    </div>
+    <div class="login">
+      <button class="signup"> Get Started </button>
+      <button> Login </button>
+    </div>
+  </nav>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>('.header');
+
+  if (header) {
+    const updateHeader = () => {
+      header.classList.toggle('scrolled', window.scrollY > 0);
+    };
+
+    updateHeader();
+    window.addEventListener('scroll', updateHeader, { passive: true });
+  }
+</script>

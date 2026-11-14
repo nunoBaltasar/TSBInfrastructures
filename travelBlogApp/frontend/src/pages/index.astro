@@ -33,7 +33,7 @@ const galleryImagesResponse = await fetchApi<
   query: {
     populate: 'image',
     sort: 'publishedAt:desc',
-    'pagination[pageSize]': '5',
+    'pagination[pageSize]': '6',
   },
 });
 
@@ -48,13 +48,20 @@ const getMediaUrl = (url: string) =>
 
 <BaseLayout title="Travel Blog">
   <header>
-    <section style = {`background-image: url('${headerImage.src}'); background-size: cover; 
-    background-repeat: no-repeat; background-attachment: fixed; height: 100vh; width: 100%;`}>
+    <section class = "hero" style = {`background-image:
+    linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.75) 0%,   
+    rgba(0, 0, 0, 0.15) 50%,     
+    rgba(0, 0, 0, 0.5) 100%   
+  ),
+    url('${headerImage.src}'); background-size: cover; 
+    background-repeat: no-repeat; background-attachment: fixed;  height: 100vh; width: 100%;`}>
       <div class = "left">
         <h1>Explore <span>Travel Blog</span></h1>
         <p>Discover the world through our travel stories and guides.</p>
         
-        <a href = "#">
+        <a href = "/gallery">
           <i class = 'bx bx-compass'></i>
           <span> Explore Now </span>
         </a>
@@ -72,12 +79,12 @@ const getMediaUrl = (url: string) =>
           </p>
         </div>
         <div class = "about-buttons">
-          <a class = "authors" href = "#">
+          <a class = "authors" href = "/authors">
             <span>{totalAuthors}</span>
             <span>Current</span> 
             <span>Authors</span>
           </a>
-          <a href = "#">
+          <a href = "/articles">
             <span>{totalArticles}</span>
             <span>Total</span> 
             <span>Articles</span>
@@ -87,23 +94,340 @@ const getMediaUrl = (url: string) =>
     </div>
 
     <section class = "galleryShow">
-      <h2>Some of our photos</h2>
-      <div class = "carousel">
-        {galleryImages.map((galleryImage) =>
-        galleryImage.image ? (
-          <a href={`/gallery/${galleryImage.slug}`}>
-            <img
-              src={getMediaUrl(
-                galleryImage.image.formats?.medium?.url ?? galleryImage.image.url
-              )}
-              alt={galleryImage.image.alternativeText ?? galleryImage.title}
-              loading="lazy"
-            />
-          </a>
-          ) : null
-        )}
+      <h2>Some of our <span>photos</span></h2>
+      <div class="carousel">
+        <button class="carousel-button previous">
+          <i class="bx bx-chevron-left"></i>
+        </button>
+
+        <div class="carousel-viewport">
+          <div class="carousel-track">
+            {galleryImages.map((galleryImage) =>
+              galleryImage.image ? (
+                <a class="carousel-item" href={`/gallery/${galleryImage.slug}`}>
+                  <img
+                    src={getMediaUrl(
+                      galleryImage.image.formats?.medium?.url ?? galleryImage.image.url
+                    )}
+                    alt={galleryImage.image.alternativeText ?? galleryImage.title}
+                  />
+                </a>
+              ) : null
+            )}
+          </div>
+        </div>
+
+        <button class="carousel-button next">
+          <i class="bx bx-chevron-right"></i>
+        </button>
       </div>
     </section>
   </header>
 </BaseLayout>
+
+<script>
+  const track = document.querySelector<HTMLElement>('.carousel-track');
+  const previousButton = document.querySelector<HTMLButtonElement>('.previous');
+  const nextButton = document.querySelector<HTMLButtonElement>('.next');
+
+  if (track) {
+    const originalItems = Array.from(track.children);
+    const totalItems = originalItems.length;
+
+    if (totalItems > 0) {
+      const beforeClones = originalItems.map((item) =>
+        item.cloneNode(true)
+      );
+
+      const afterClones = originalItems.map((item) =>
+        item.cloneNode(true)
+      );
+
+      track.prepend(...beforeClones);
+      track.append(...afterClones);
+
+      let currentIndex = totalItems;
+
+      const normalizeIndex = () => {
+        currentIndex =
+          ((currentIndex - totalItems) % totalItems + totalItems) %
+            totalItems +
+          totalItems;
+      };
+
+      const updateCarousel = (animate = true) => {
+        const firstItem = track.children[0] as HTMLElement;
+        const itemWidth = firstItem.getBoundingClientRect().width;
+        const gap = 30;
+
+        track.style.transition = animate ? 'transform 0.4s ease' : 'none';
+        track.style.transform =
+          `translateX(-${currentIndex * (itemWidth + gap)}px)`;
+      };
+
+      let pendingMoves = 0;
+      let maxPendingMoves = 3;
+      let isAnimating = false;
+
+      const processNextMove = () => {
+        if (pendingMoves === 0) {
+          return;
+        }
+        if (pendingMoves > maxPendingMoves) {
+          pendingMoves = maxPendingMoves;
+        } else if (pendingMoves < -maxPendingMoves) {
+          pendingMoves = -maxPendingMoves;
+        }
+        currentIndex += pendingMoves > 0 ? 1 : -1;
+        pendingMoves += pendingMoves > 0 ? -1 : 1;
+        isAnimating = true;
+        updateCarousel();
+      };
+
+      nextButton?.addEventListener('click', () => {
+        pendingMoves++;
+        if (!isAnimating) {
+          processNextMove();
+        }
+      });
+
+      previousButton?.addEventListener('click', () => {
+        pendingMoves--;
+        if (!isAnimating) {
+          processNextMove();
+        }
+      });
+
+      track.addEventListener('transitionend', () => {
+        isAnimating = false;
+
+        if (currentIndex >= totalItems * 2 || currentIndex < totalItems) {
+          normalizeIndex();
+          updateCarousel(false);
+        }
+
+        processNextMove();
+      });
+
+      updateCarousel(false);
+      window.addEventListener('resize', () => updateCarousel(false));
+    }
+  }
+</script>
+
+<style>
+  /* travel blog home page */
+  section {
+    padding: 0 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  section .left {
+    width: 700px;
+  }
+
+  section .left h1 {
+    font-size: 80px;
+    color: #ffffff;
+  }
+
+  section .left h1 span {
+    color: #74ff74;
+  }
+
+  section .left p {
+    font-size: 20px;
+    color: #ffffff;
+    margin-top: 10px;
+    margin-left: -75px;
+  }
+
+  section .left a {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border-radius: 4px;
+    font-size: 40px;
+    padding: 8px 18px;
+    margin-top: 25px;
+    margin-left: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.3s ease;
+  }
+
+  section .left a:hover {
+    background-color: var(--color-primary-dark);
+  }
+
+  section .left a i {
+    font-size: 50px;
+  }
+
+  /* about */
+  header .about h2 {
+    font-size: 80px;
+    color: #000;
+    padding: 0 80px;
+    margin-top: 100px;
+  }
+
+  header .about h2 span {
+    color: #2A522A;
+  }
+
+  header p {
+    font-size: 20px;
+    color: #000;
+    padding: 0 80px;
+  }
+
+  .about-us {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .about-content p {
+    max-width: 1050px;
+  }
+
+  .about-buttons a {
+    background-color: #2d9b2d;
+    color: #ffffff;
+    border-radius: 4px;
+    font-size: 40px;
+    padding: 8px 18px;
+    margin-top: 25px;
+    margin-left: 5px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  /* carousel */
+  .galleryShow {
+    margin-top: 100px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .galleryShow h2 {
+    font-size: 60px;
+    color: #000;
+    padding: 0 80px;
+    margin-top: 30px;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 12px;
+  }
+
+  .galleryShow h2::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #2A522A;
+  }
+
+  .galleryShow h2 span {
+    color: #2A522A;
+  }
+
+  .carousel {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px 80px;
+    margin-top: 50px;
+  }
+
+  .carousel-viewport {
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .carousel-track {
+    display: flex;
+    gap: 30px;
+    transition: transform 0.5s ease;
+  }
+
+  .carousel-item {
+    flex: 0 0 calc((100% - 120px) / 5);
+    max-width: none;
+  }
+
+  .carousel-item img {
+    display: block;
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+  }
+
+  .carousel-button {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: rgb(161, 161, 161);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .carousel-button.next {
+    animation: move-button-right 1.2s ease-in-out infinite;
+  }
+
+  .carousel-button.previous {
+    animation: move-button-left 1.2s ease-in-out infinite;
+  }
+
+  .carousel-button i {
+    color: #ffffff;
+    font-size: 28px;
+  }
+
+  .carousel-button:hover {
+    background-color: rgb(90, 90, 90);
+  }
+
+  .carousel-button {
+    transition: background-color 0.4s ease;
+  }
+
+  @keyframes move-button-right {
+    0%, 100% {
+      transform: translateX(0);
+    }
+
+    50% {
+      transform: translateX(6px);
+    }
+  }
+
+  @keyframes move-button-left {
+    0%, 100% {
+      transform: translateX(0);
+    }
+
+    50% {
+      transform: translateX(-6px);
+    }
+  }
+
+  .carousel:has(.carousel-button:hover) .carousel-button {
+    animation-play-state: paused;
+  }
+</style>
 

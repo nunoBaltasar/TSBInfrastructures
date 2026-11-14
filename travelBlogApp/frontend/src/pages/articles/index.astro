@@ -1,0 +1,185 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import headerImage from '../../assets/hills.png';
+import fetchApi from '../../lib/strapi';
+import ArticleCard from '../../components/common/ArticleCard.astro';
+import type {
+  Article,
+  StrapiCollectionResponse,
+} from '../../interfaces/strapi';
+
+const articlesResponse = await fetchApi<StrapiCollectionResponse<Article>>(
+  {
+    endpoint: 'articles',
+    query: {
+      populate: 'coverImage',
+      sort: 'publishedAt:desc',
+      'pagination[pageSize]': '11',
+    },
+  },
+);
+
+const latestArticle = articlesResponse.data[0];
+const strapiUrl = import.meta.env.STRAPI_URL;
+const getMediaUrl = (url: string) =>
+  url.startsWith('http') ? url : `${strapiUrl}${url}`;
+
+---
+
+<BaseLayout title="Articles | TravelBlog">
+    <header>
+      <section style = {`background-image:
+      linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.9) 0%,   
+        rgba(0, 0, 0, 0.3) 50%,     
+        rgba(0, 0, 0, 0.75) 100%   
+      ),
+        url('${headerImage.src}'); background-size: 100% 100%; background-position: center; 
+        background-repeat: no-repeat; background-attachment: fixed;  height: 100vh; width: 100%;`}>
+        <div class = "left">
+          <h1>Stories & <span>Guides</span></h1>
+          <div class = "par">
+            <p>Discover the best travel experiences and tips.
+            Check on our latest article published. </p> 
+            <i class="bx bx-right-arrow-circle"></i>
+          </div>
+          
+          
+        </div>
+        {latestArticle?.coverImage && (
+            <section class="latestArticle">
+              <div class="latestArticleCard">
+                <ArticleCard
+                  title={latestArticle.title}
+                  description={latestArticle.summary}
+                  slug={latestArticle.slug}
+                  image={getMediaUrl(latestArticle.coverImage.url)}
+                  author={latestArticle.author?.name ?? 'TravelBlog'}
+                  publishedAt={new Date(latestArticle.publishedAt).toLocaleDateString('pt-PT')}
+                />
+              </div>
+            </section>
+          )}
+      </section>
+      <div class="articlesList">
+        <h2>All <span>Articles</span></h2>
+
+        <div class="articlesGrid">
+          {articlesResponse.data.slice(1, 11).map((article) =>
+            article.coverImage ? (
+              <div class="gridCard">
+                <ArticleCard
+                  title={article.title}
+                  description={article.summary}
+                  slug={article.slug}
+                  image={getMediaUrl(article.coverImage.url)}
+                  author={article.author?.name ?? 'TravelBlog'}
+                  publishedAt={new Date(article.publishedAt).toLocaleDateString('pt-PT')}
+                />
+              </div>
+            ) : null
+          )}
+        </div>
+      </div>
+    </header>
+</BaseLayout>
+
+
+
+<style>
+section{
+    padding: 0 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+section .left{
+    width: 700px;
+}
+
+section .left h1{
+    font-size: 100px;
+    color: #ffffff;
+    line-height: 1;
+    margin-bottom: 50px;
+    
+    
+}
+section .left h1 span{
+    color: var(--color-accent);
+}
+
+section .left .par{
+    font-size: 20px;
+    color: #ffffff;
+    margin-top: 10px;
+    flex-direction: row;
+    display: flex;
+    margin-bottom: 100px;
+    margin-left: 10px;
+}
+.left .par p{
+  width: 400px;
+}
+
+section .left .par i{
+    font-size: 45px;
+    margin-top: 10px;
+    animation: bounce 1.2s infinite;
+  
+}
+@keyframes bounce {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    50% {
+        transform: translateX(10px);
+    }
+}
+
+.latestArticle {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  width: 100%;
+  padding-right: 65px;
+  margin-top: 60px;
+}
+
+
+
+/* Articles List Styles */
+.articlesList {
+  width: min(1100px, calc(100% - 160px));
+  margin: 0 auto;
+  padding: 60px 0;
+}
+
+.articlesList h2 {
+  width: 100%;
+  margin: 0 0 30px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #000000;
+  font-size: 67px;
+  color: #000000;
+  box-sizing: border-box;
+}
+.articlesList h2 span {
+  color: var(--color-primary-dark);
+}
+
+.articlesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 30px;
+  width: 100%;
+}
+.articlesGrid > .gridCard:nth-child(even) {
+  position: relative;
+  left: 15px;
+}
+
+</style>

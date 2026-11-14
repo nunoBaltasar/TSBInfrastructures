@@ -1,0 +1,101 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import fetchApi from '../../lib/strapi';
+import headerImage from '../../assets/friskymountains.png';
+import GalleryCard from '../../components/common/GalleryCard.astro';
+import type { GalleryImage, StrapiCollectionResponse } from '../../interfaces/strapi';
+
+const galleryImagesResponse = await fetchApi<
+  StrapiCollectionResponse<GalleryImage>
+>({
+  endpoint: 'gallery-images',
+  query: {
+    populate: 'image',
+    sort: 'publishedAt:desc',
+    'pagination[pageSize]': '100',
+  },
+});
+
+const strapiUrl = import.meta.env.STRAPI_URL;
+const getMediaUrl = (url: string) =>
+  url.startsWith('http') ? url : `${strapiUrl}${url}`;
+---
+
+<BaseLayout title="Gallery | TravelBlog">
+    
+    <header class="galleryHeader">
+        <section style =  {`background-image:
+        linear-gradient(to bottom,rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0.75) 100%),
+        url('${headerImage.src}'); background-size: 100% 100%; background-position: center; 
+        background-repeat: no-repeat; background-attachment: fixed;  height: 100vh; width: 100%;`
+        }>
+        
+            <h1>Gallery</h1>
+            <p>Explore our collection of travel photographs.</p>
+        </section> 
+    </header>
+    <main class="galleryPage">
+
+    <section class="galleryGrid" aria-label="Travel gallery">
+      {galleryImagesResponse.data.map((galleryImage) =>
+        galleryImage.image ? (
+          <GalleryCard
+            title={galleryImage.title}
+            description={galleryImage.description}
+            location={galleryImage.location}
+            slug={galleryImage.slug}
+            image={getMediaUrl(
+              galleryImage.image.formats?.large?.url ??
+                galleryImage.image.formats?.medium?.url ??
+                galleryImage.image.url
+            )}
+          />
+        ) : null
+      )}
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .galleryPage {
+    padding: 80px;
+    background: #ffffff;
+  }
+
+  .galleryHeader {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+    }
+.galleryHeader section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+  }
+  .galleryHeader h1 {
+    margin: 0;
+    font-size: 200px;
+    color: #ffffff;
+  }
+
+  .galleryHeader p {
+    font-size: 20px;
+    color: #ffffff;
+  }
+
+  .galleryGrid {
+    display: block;
+    column-count: 3;
+    column-gap: 24px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+</style>
+

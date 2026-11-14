@@ -48,7 +48,6 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::article.article",
-      "required": false,
       "mappedBy": "gallery_image"
     }
   }

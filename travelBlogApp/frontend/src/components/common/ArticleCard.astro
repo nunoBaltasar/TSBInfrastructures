@@ -42,11 +42,16 @@ const {
 <style>
 
   .articleCard {
-    position: relative;
-    overflow: hidden;
-    background-color: #000;
-    border-radius: 4px;
-  }
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 520px;
+  height: 560px;
+  box-sizing: border-box;
+  background-color: #000;
+  border-radius: 4px;
+}
 
 
   .articleCard::before {
@@ -75,11 +80,12 @@ const {
   }
 
   .articleContent {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-  }
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 24px;
+}
 
   .articleContent h2 {
     margin: 0 0 12px;
@@ -101,34 +107,37 @@ const {
   }
 
   .articleDescription {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0 10px;
-    height: calc(1.7em * 4);
-    overflow: hidden;
-    font-size: 18px;
-    text-align: justify;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 4;
-  }
+  color: #ffffff;
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  height: calc(1.7em * 4);
+  box-sizing: border-box;
+  overflow: hidden;
+  font-size: 20px;
+  text-align: justify;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
 
   .readMore {
     color: #000;
-    font-size: 42px;
+    font-size: 22px;
     align-items: center;
     justify-content: center;
     display: flex;
     background-color: #ffffff;
-    border: 1px solid transparent;
+    border: 2px solid transparent;
+    border-radius: 4px;
   }
 
   .readMore:hover {
     transition: background-color 0.3s ease;
     background-color: #000;
     color: #ffffff;
-    border: 1px solid #ffffff;
+    border: 2px solid #ffffff;
   }
 
 

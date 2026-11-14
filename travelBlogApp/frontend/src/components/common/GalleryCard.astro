@@ -1,0 +1,82 @@
+---
+interface Props {
+  title: string;
+  image: string;
+  slug: string;
+  description?: string;
+  location?: string;
+}
+
+const {
+  title,
+  image,
+  slug,
+  description,
+  location,
+} = Astro.props as Props;
+---
+
+<a class="galleryCard" href={`/gallery/${slug}`}>
+  <img src={image} alt={title} loading="lazy" />
+
+  <div class="galleryCardOverlay">
+    <h2>{title}</h2>
+  </div>
+</a>
+
+<style>
+  .galleryCard {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    break-inside: avoid;
+    margin-bottom: 24px;
+    color: #ffffff;
+    
+  }
+
+  .galleryCard img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform 0.3s ease;
+  }
+
+  .galleryCardOverlay {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 48px 20px 20px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .galleryCard h2 {
+    margin: 0;
+    font-size: 24px;
+  }
+
+  .galleryCard p,
+  .galleryCard span {
+    display: block;
+    margin: 6px 0 0;
+  }
+
+  .galleryCard span {
+    overflow: hidden;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .galleryCard:hover img {
+    transform: scale(1.03);
+  }
+
+  .galleryCard:hover .galleryCardOverlay,
+  .galleryCard:focus-visible .galleryCardOverlay {
+    opacity: 1;
+  }
+</style>

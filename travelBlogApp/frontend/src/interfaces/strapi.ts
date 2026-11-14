@@ -27,6 +27,7 @@ export interface Tag {
   documentId: string;
   name: string;
   slug: string;
+  articles?: Article | null;
 }
 
 export interface Author {
@@ -34,12 +35,10 @@ export interface Author {
   documentId: string;
   name: string;
   slug: string;
-  biography?: string;
-  role?: string;
+  biography?: string | null;
   profileImage?: StrapiMedia | null;
-  website?: string | null;
-  instagram?: string | null;
-  youtube?: string | null;
+  articles?: Article | null;
+  gallery_image?: GalleryImage | null;
 }
 
 export interface Article {
@@ -49,12 +48,12 @@ export interface Article {
   slug: string;
   summary: string;
   content: unknown;
-  featured: boolean;
   publishedAt: string;
   coverImage: StrapiMedia | null;
   media?: StrapiMedia[];
   author?: Author | null;
   tags?: Tag[];
+  gallery_image?: GalleryImage | null;
 }
 
 export interface GalleryImage {
@@ -62,12 +61,12 @@ export interface GalleryImage {
   documentId: string;
   title: string;
   slug: string;
-  description?: string;
+  description: string;
   location?: string;
   publishedAt: string;
   image: StrapiMedia | null;
   author?: Author | null;
-  tags?: Tag[];
+  articles?: Article[];
 }
 
 export interface StrapiCollectionResponse<T> {

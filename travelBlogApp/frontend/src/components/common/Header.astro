@@ -1,11 +1,11 @@
 <header>
   <nav class = "header">
-    <a href="#" class = "logo">TravelBlog</a> 
+    <a href="/" class = "logo">TravelBlog</a> 
     <div class="links">
-      <a href= "#"> Home </a>
-      <a href= "#"> Articles </a>
-      <a href= "#"> Authors </a>
-      <a href= "#"> Gallery </a>
+      <a href= "/"> Homepage </a>
+      <a href= "/articles"> Articles </a>
+      <a href= "/authors"> Authors </a>
+      <a href= "/gallery"> Gallery </a>
     </div>
     <div class="login">
       <button class="signup"> Get Started </button>
@@ -26,3 +26,63 @@
     window.addEventListener('scroll', updateHeader, { passive: true });
   }
 </script>
+
+
+<style>
+  
+header .header{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background-color: transparent; /* Transparente inicialmente */
+    transition: background-color 0.3s ease, padding 0.3s ease; /* Animação suave */
+    z-index: 1000;
+    box-sizing: border-box;
+
+}
+
+header .header.scrolled {
+  background-color: #000; /* Cor escura da barra */
+}
+
+
+header .header  a {
+    font-size: 20px;
+    color: #ffffff;
+    font-weight: 300;
+}
+header .header  .logo{
+    color: #74ff74;
+    font-size: 30px;
+    font-weight: 700;
+}
+
+header .header .links a:not(:last-child){
+    margin-right: 20px;
+}
+
+header .header .login{
+    color: #ffffff; 
+}
+header .header .login button{
+    padding: 8px 14px;
+    border: none;
+    margin-right: 14px;
+    cursor: pointer;
+}
+
+header .header .login button.signup{
+    background-color: #2d9b2d;
+    color: #fff;
+    border-radius: 4px;
+    margin-left: 14px;
+}
+
+</style>
+

@@ -22,7 +22,7 @@
           "localized": true
         }
       },
-      "maxLength": 20,
+      "maxLength": 30,
       "required": true
     },
     "slug": {
@@ -52,6 +52,7 @@
           "localized": true
         }
       },
+      "maxLength": 160,
       "required": true
     },
     "author": {
@@ -75,23 +76,9 @@
         "files"
       ]
     },
-    "media": {
-      "type": "media",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "multiple": true,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos"
-      ]
-    },
     "tags": {
       "type": "relation",
-      "relation": "oneToMany",
+      "relation": "manyToMany",
       "target": "api::tag.tag",
       "mappedBy": "articles"
     },

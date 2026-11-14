@@ -33,9 +33,15 @@
     },
     "articles": {
       "type": "relation",
-      "relation": "manyToOne",
+      "relation": "manyToMany",
       "target": "api::article.article",
       "inversedBy": "tags"
+    },
+    "gallery_images": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::gallery-image.gallery-image",
+      "mappedBy": "tags"
     }
   }
 }

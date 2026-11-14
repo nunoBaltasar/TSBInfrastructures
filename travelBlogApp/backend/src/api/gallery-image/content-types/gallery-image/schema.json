@@ -49,6 +49,12 @@
       "relation": "oneToMany",
       "target": "api::article.article",
       "mappedBy": "gallery_image"
+    },
+    "tags": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::tag.tag",
+      "inversedBy": "gallery_images"
     }
   }
 }

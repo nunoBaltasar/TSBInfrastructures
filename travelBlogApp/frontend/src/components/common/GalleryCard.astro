@@ -25,7 +25,7 @@ const {
 </a>
 
 <style>
-  .galleryCard {
+  :global(.galleryCard) {
     position: relative;
     display: block;
     overflow: hidden;
@@ -35,14 +35,14 @@ const {
     
   }
 
-  .galleryCard img {
+  :global(.galleryCard img) {
     display: block;
     width: 100%;
     height: auto;
     transition: transform 0.3s ease;
   }
 
-  .galleryCardOverlay {
+  :global(.galleryCardOverlay) {
     position: absolute;
     right: 0;
     bottom: 0;
@@ -53,30 +53,30 @@ const {
     transition: opacity 0.3s ease;
   }
 
-  .galleryCard h2 {
+  :global(.galleryCard h2) {
     margin: 0;
     font-size: 24px;
   }
 
-  .galleryCard p,
-  .galleryCard span {
+  :global(.galleryCard p),
+  :global(.galleryCard span) {
     display: block;
     margin: 6px 0 0;
   }
 
-  .galleryCard span {
+  :global(.galleryCard span) {
     overflow: hidden;
     font-size: 14px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .galleryCard:hover img {
+  :global(.galleryCard:hover img) {
     transform: scale(1.03);
   }
 
-  .galleryCard:hover .galleryCardOverlay,
-  .galleryCard:focus-visible .galleryCardOverlay {
+  :global(.galleryCard:hover .galleryCardOverlay),
+  :global(.galleryCard:focus-visible .galleryCardOverlay) {
     opacity: 1;
   }
 </style>

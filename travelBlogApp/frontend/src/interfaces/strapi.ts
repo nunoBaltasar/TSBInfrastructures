@@ -47,13 +47,32 @@ export interface Article {
   title: string;
   slug: string;
   summary: string;
-  content: unknown;
+  content: StrapiBlock[];
   publishedAt: string;
   coverImage: StrapiMedia | null;
-  media?: StrapiMedia[];
   author?: Author | null;
   tags?: Tag[];
   gallery_image?: GalleryImage | null;
+}
+
+export interface StrapiBlockChild {
+  type: string;
+  text?: string;
+  url?: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strikethrough?: boolean;
+  code?: boolean;
+  children?: StrapiBlockChild[];
+}
+
+export interface StrapiBlock {
+  type: string;
+  level?: number;
+  format?: 'ordered' | 'unordered';
+  children?: StrapiBlockChild[];
+  image?: StrapiMedia;
 }
 
 export interface GalleryImage {

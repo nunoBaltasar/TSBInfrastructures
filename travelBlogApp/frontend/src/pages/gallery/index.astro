@@ -5,6 +5,7 @@ import headerImage from '../../assets/friskymountains.png';
 import GalleryCard from '../../components/common/GalleryCard.astro';
 import type { GalleryImage, StrapiCollectionResponse } from '../../interfaces/strapi';
 
+const galleryPageSize = 30;
 const galleryImagesResponse = await fetchApi<
   StrapiCollectionResponse<GalleryImage>
 >({
@@ -12,7 +13,8 @@ const galleryImagesResponse = await fetchApi<
   query: {
     populate: 'image',
     sort: 'publishedAt:desc',
-    'pagination[pageSize]': '100',
+    'pagination[page]': '1',
+    'pagination[pageSize]': String(galleryPageSize),
   },
 });
 
@@ -36,7 +38,14 @@ const getMediaUrl = (url: string) =>
     </header>
     <main class="galleryPage">
 
-    <section class="galleryGrid" aria-label="Travel gallery">
+    <section
+      class="galleryGrid"
+      aria-label="Travel gallery"
+      data-gallery-grid
+      data-strapi-url={strapiUrl}
+      data-page-size={galleryPageSize}
+      data-page-count={galleryImagesResponse.meta.pagination.pageCount}
+    >
       {galleryImagesResponse.data.map((galleryImage) =>
         galleryImage.image ? (
           <GalleryCard
@@ -53,8 +62,169 @@ const getMediaUrl = (url: string) =>
         ) : null
       )}
     </section>
+    {galleryImagesResponse.meta.pagination.pageCount > 1 && (
+      <div class="gallerySentinel" data-gallery-sentinel aria-live="polite">
+        Loading more photos...
+      </div>
+    )}
   </main>
 </BaseLayout>
+
+<script>
+  interface GalleryMediaFormat {
+    url: string;
+  }
+
+  interface GalleryMedia {
+    url: string;
+    formats?: Record<string, GalleryMediaFormat>;
+  }
+
+  interface GalleryApiImage {
+    title: string;
+    slug: string;
+    image: GalleryMedia | null;
+  }
+
+  interface GalleryApiResponse {
+    data: GalleryApiImage[];
+    meta: {
+      pagination: {
+        page: number;
+        pageCount: number;
+      };
+    };
+  }
+
+  const loadGalleryPage = async (
+    strapiUrl: string,
+    page: number,
+    pageSize: number,
+  ): Promise<GalleryApiResponse> => {
+    const query = new URLSearchParams({
+      populate: 'image',
+      sort: 'publishedAt:desc',
+      'pagination[page]': String(page),
+      'pagination[pageSize]': String(pageSize),
+    });
+    const response = await fetch(`${strapiUrl}/api/gallery-images?${query}`);
+
+    if (!response.ok) {
+      throw new Error(`Gallery request failed with status ${response.status}`);
+    }
+
+    return response.json() as Promise<GalleryApiResponse>;
+  };
+
+  const createGalleryCard = (
+    galleryImage: GalleryApiImage,
+    strapiUrl: string,
+  ): HTMLAnchorElement | null => {
+    if (!galleryImage.image) {
+      return null;
+    }
+
+    const imageUrl =
+      galleryImage.image.formats?.large?.url ??
+      galleryImage.image.formats?.medium?.url ??
+      galleryImage.image.url;
+    const card = document.createElement('a');
+    card.className = 'galleryCard';
+    card.href = `/gallery/${galleryImage.slug}`;
+
+    const image = document.createElement('img');
+    image.src = imageUrl.startsWith('http')
+      ? imageUrl
+      : `${strapiUrl}${imageUrl}`;
+    image.alt = galleryImage.title;
+    image.loading = 'lazy';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'galleryCardOverlay';
+
+    const title = document.createElement('h2');
+    title.textContent = galleryImage.title;
+
+    overlay.append(title);
+    card.append(image, overlay);
+    return card;
+  };
+
+  const initializeGallery = () => {
+    const grid = document.querySelector<HTMLElement>('[data-gallery-grid]');
+    const sentinel = document.querySelector<HTMLElement>('[data-gallery-sentinel]');
+
+    if (!grid || !sentinel) {
+      return;
+    }
+
+    const strapiUrl = grid.dataset.strapiUrl;
+    const pageSize = Number(grid.dataset.pageSize);
+    const pageCount = Number(grid.dataset.pageCount);
+
+    if (
+      !strapiUrl ||
+      !Number.isInteger(pageSize) ||
+      !Number.isInteger(pageCount)
+    ) {
+      return;
+    }
+
+    let currentPage = 1;
+    let isLoading = false;
+
+    const observer = new IntersectionObserver(
+      async ([entry]) => {
+        if (
+          !entry.isIntersecting ||
+          isLoading ||
+          currentPage >= pageCount
+        ) {
+          return;
+        }
+
+        isLoading = true;
+        sentinel.textContent = 'Loading more photos...';
+
+        try {
+          const nextPage = currentPage + 1;
+          const response = await loadGalleryPage(
+            strapiUrl,
+            nextPage,
+            pageSize,
+          );
+          const cards = response.data
+            .map((galleryImage) => createGalleryCard(galleryImage, strapiUrl))
+            .filter((card): card is HTMLAnchorElement => card !== null);
+
+          grid.append(...cards);
+          currentPage = nextPage;
+
+          if (currentPage >= pageCount) {
+            observer.disconnect();
+            sentinel.remove();
+          }
+        } catch (error) {
+          console.error('Unable to load more gallery photos.', error);
+          sentinel.textContent = 'Unable to load more photos. Try again.';
+        } finally {
+          isLoading = false;
+        }
+      },
+      { rootMargin: '600px 0px' },
+    );
+
+    observer.observe(sentinel);
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeGallery, {
+      once: true,
+    });
+  } else {
+    initializeGallery();
+  }
+</script>
 
 <style>
   .galleryPage {

@@ -1,0 +1,212 @@
+---
+import type {
+  StrapiBlock,
+  StrapiBlockChild,
+  StrapiMedia,
+} from '../../interfaces/strapi';
+
+interface Props {
+  content: StrapiBlock[];
+  mediaBaseUrl: string;
+}
+
+const { content, mediaBaseUrl } = Astro.props;
+
+const escapeHtml = (value: string) =>
+  value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+
+const getSafeUrl = (value: string) => {
+  const url = value.trim();
+
+  if (
+    url.startsWith('/') ||
+    url.startsWith('#') ||
+    url.startsWith('mailto:') ||
+    url.startsWith('https://') ||
+    url.startsWith('http://')
+  ) {
+    return url;
+  }
+
+  return '#';
+};
+
+const getMediaUrl = (media: StrapiMedia) => {
+  if (!media.url.startsWith('http')) {
+    return `${mediaBaseUrl}${media.url}`;
+  }
+
+  const mediaUrl = new URL(media.url);
+  const configuredBaseUrl = new URL(mediaBaseUrl);
+  const isLocalMediaHost =
+    mediaUrl.hostname === 'localhost' ||
+    mediaUrl.hostname === '127.0.0.1';
+
+  return isLocalMediaHost
+    ? `${configuredBaseUrl.origin}${mediaUrl.pathname}${mediaUrl.search}`
+    : media.url;
+};
+
+const renderInlineChildren = (children: StrapiBlockChild[] = []): string =>
+  children
+    .map((child) => {
+      if (child.type === 'text') {
+        let text = escapeHtml(child.text ?? '');
+
+        if (child.bold) text = `<strong>${text}</strong>`;
+        if (child.italic) text = `<em>${text}</em>`;
+        if (child.underline) text = `<u>${text}</u>`;
+        if (child.strikethrough) text = `<s>${text}</s>`;
+        if (child.code) text = `<code>${text}</code>`;
+
+        return text;
+      }
+
+      if (child.type === 'link') {
+        return `<a href="${escapeHtml(getSafeUrl(child.url ?? '#'))}">${renderInlineChildren(child.children)}</a>`;
+      }
+
+      return renderInlineChildren(child.children);
+    })
+    .join('');
+
+const renderBlock = (block: StrapiBlock): string => {
+  const children = block.children ?? [];
+  const inlineContent = renderInlineChildren(children);
+
+  switch (block.type) {
+    case 'paragraph':
+      return `<p>${inlineContent}</p>`;
+    case 'heading': {
+      const level = Math.min(Math.max(block.level ?? 2, 1), 6);
+      return `<h${level}>${inlineContent}</h${level}>`;
+    }
+    case 'quote':
+      return `<blockquote>${inlineContent}</blockquote>`;
+    case 'code':
+      return `<pre><code>${escapeHtml(
+        children.map((child) => child.text ?? '').join(''),
+      )}</code></pre>`;
+    case 'list': {
+      const tag = block.format === 'ordered' ? 'ol' : 'ul';
+      const items = children
+        .map(
+          (item) =>
+            `<li>${renderInlineChildren(item.children)}</li>`,
+        )
+        .join('');
+      return `<${tag}>${items}</${tag}>`;
+    }
+    case 'image': {
+      if (!block.image) return '';
+
+      const imageUrl = getMediaUrl(block.image);
+      const alt = escapeHtml(
+        block.image.alternativeText ?? block.image.name,
+      );
+      const caption = block.image.caption
+        ? `<figcaption>${escapeHtml(block.image.caption)}</figcaption>`
+        : '';
+
+      return `<figure><img src="${escapeHtml(imageUrl)}" alt="${alt}" loading="lazy" />${caption}</figure>`;
+    }
+    default:
+      return inlineContent;
+  }
+};
+
+const renderedContent = content.map(renderBlock).join('');
+---
+
+<div class="strapiBlocks" set:html={renderedContent}></div>
+
+<style>
+  .strapiBlocks {
+    color: #334155;
+    font-size: 1.125rem;
+    line-height: 2;
+  }
+
+  .strapiBlocks :global(p),
+  .strapiBlocks :global(ul),
+  .strapiBlocks :global(ol),
+  .strapiBlocks :global(blockquote),
+  .strapiBlocks :global(figure),
+  .strapiBlocks :global(pre) {
+    margin: 0 0 1.5rem;
+  }
+
+  .strapiBlocks :global(h1),
+  .strapiBlocks :global(h2),
+  .strapiBlocks :global(h3),
+  .strapiBlocks :global(h4),
+  .strapiBlocks :global(h5),
+  .strapiBlocks :global(h6) {
+    margin: 2rem 0 1rem;
+    color: #0f172a;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .strapiBlocks :global(ul),
+  .strapiBlocks :global(ol) {
+    padding-left: 1.5rem;
+  }
+
+  .strapiBlocks :global(ul) {
+    list-style: disc;
+  }
+
+  .strapiBlocks :global(ol) {
+    list-style: decimal;
+  }
+
+  .strapiBlocks :global(blockquote) {
+    border-left: 4px solid #38bdf8;
+    padding-left: 1rem;
+    color: #475569;
+    font-style: italic;
+  }
+
+  .strapiBlocks :global(a) {
+    color: #0369a1;
+    text-decoration: underline;
+  }
+
+  .strapiBlocks :global(code) {
+    border-radius: 0.25rem;
+    background: #e2e8f0;
+    padding: 0.125rem 0.25rem;
+    font-size: 0.9em;
+  }
+
+  .strapiBlocks :global(pre) {
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    background: #0f172a;
+    padding: 1rem;
+    color: #e2e8f0;
+  }
+
+  .strapiBlocks :global(pre code) {
+    background: transparent;
+    padding: 0;
+  }
+
+  .strapiBlocks :global(img) {
+    height: auto;
+    max-width: 100%;
+    border-radius: 0.75rem;
+  }
+
+  .strapiBlocks :global(figcaption) {
+    color: #64748b;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+</style>

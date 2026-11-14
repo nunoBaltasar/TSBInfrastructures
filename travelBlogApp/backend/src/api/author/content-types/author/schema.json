@@ -13,6 +13,7 @@
   "attributes": {
     "name": {
       "type": "string",
+      "maxLength": 50,
       "required": true,
       "unique": false
     },
@@ -23,7 +24,8 @@
       "regex": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
     "biography": {
-      "type": "richtext"
+      "type": "richtext",
+      "maxLength": 300
     },
     "profileImage": {
       "type": "media",

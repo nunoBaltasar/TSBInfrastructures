@@ -30,6 +30,7 @@
     "profileImage": {
       "type": "media",
       "multiple": false,
+      "required": true,
       "allowedTypes": [
         "images",
         "files"
@@ -47,12 +48,11 @@
       "target": "api::gallery-image.gallery-image",
       "inversedBy": "author"
     },
-    "user": {
+    "admin_user": {
       "type": "relation",
       "relation": "oneToOne",
-      "target": "plugin::users-permissions.user",
-      "required": true,
-      "mappedBy": "author"
+      "target": "admin::user",
+      "required": true
     }
   }
 }

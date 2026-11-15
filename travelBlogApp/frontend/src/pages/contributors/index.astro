@@ -1,60 +1,162 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import headerImage from '../../assets/waterfall.png';
 import fetchApi from '../../lib/strapi';
-import ArticleCard from '../../components/common/ArticleCard.astro';
-import type {
-  Article,
-  StrapiCollectionResponse,
-} from '../../interfaces/strapi';
+import headerImage from '../../assets/waterfall.png';
+import type { Author, StrapiCollectionResponse } from '../../interfaces/strapi';
+
+const response = await fetchApi<StrapiCollectionResponse<Author>>({
+  endpoint: 'authors',
+  query: {
+    'populate[profileImage]': 'true',
+    'pagination[pageSize]': '100',
+  },
+});
+
+const strapiUrl = import.meta.env.STRAPI_URL;
+const getMediaUrl = (url: string) =>
+  url.startsWith('http') ? url : `${strapiUrl}${url}`;
+
+const roleOrder = ['Administrator', 'Moderator', 'Writer', 'Traveller'];
+const getRole = (author: Author) => {
+  const value = `${author.slug} ${author.name}`.toLowerCase();
+
+  if (value.includes('admin')) return 'Administrator';
+  if (value.includes('moderator')) return 'Moderator';
+  if (value.includes('writer')) return 'Writer';
+  if (value.includes('photographer') || value.includes('traveller')) {
+    return 'Traveller';
+  }
+
+  return null;
+};
+
+const contributorsByRole = roleOrder.map((role) => ({
+  role,
+  authors: response.data.filter((author) => getRole(author) === role),
+}));
 ---
 
-
 <BaseLayout title="Contributors | TravelBlog">
-    <header>
-      <section style = {`background-image:
-      linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0.9) 0%,   
-        rgba(0, 0, 0, 0.5) 50%,     
-        rgba(0, 0, 0, 0.75) 100%   
-      ),
+      <header class="contributorsHeader">
+        <section style =  {`background-image:
+        linear-gradient(to bottom,rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.75) 100%),
         url('${headerImage.src}'); background-size: 100% 100%; background-position: center; 
-        background-repeat: no-repeat; background-attachment: fixed;  height: 100vh; width: 100%;`}>
-        <div class = "left">
-          <h1>Contributors</h1>
-          <div class = "par">
-            <p>Meet the people behind the stories. </p> 
-            <i class="bx bx-right-arrow-circle"></i>
-          </div>
-        </div>
-      </section>
+        background-repeat: no-repeat; background-attachment: fixed;  height: 100vh; width: 100%;`
+        }>
+        
+            <h1>Contributors</h1>
+            <p>Meet the people who make our travel blog possible</p>
+        </section> 
     </header>
-    
+  <main class="contributorsPage">
 
+    {
+      contributorsByRole
+        .filter(({ authors }) => authors.length > 0)
+        .map(({ role, authors }) => (
+          <section class="roleSection" aria-labelledby={`${role.toLowerCase()}-heading`}>
+            <h2 id={`${role.toLowerCase()}-heading`}>{role}</h2>
+            <div class="contributorsGrid">
+              {authors.map((author) => (
+                <article class="contributor">
+                  {author.profileImage && (
+                    <img
+                      src={getMediaUrl(
+                        author.profileImage.formats?.medium?.url ??
+                          author.profileImage.url,
+                      )}
+                      alt={author.profileImage.alternativeText ?? author.name}
+                      loading="lazy"
+                    />
+                  )}
+                  <h3>{author.name}</h3>
+                </article>
+              ))}
+            </div>
+          </section>
+        ))
+    }
+  </main>
 </BaseLayout>
 
-
 <style>
-
-  .left {
-    
-    padding: 180px;
+  
+  .contributorsHeader {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
     
+    }
+.contributorsHeader section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100%;
   }
-  .left h1 {
+  .contributorsHeader h1 {
     margin: 0;
     font-size: 200px;
     color: #ffffff;
   }
 
-  .left p {
+  .contributorsHeader p {
     font-size: 20px;
     color: #ffffff;
   }
+  
+  .contributorsPage {
+    min-height: 100vh;
+    padding: 6rem 12.5vw 6rem;
+    background: #0b0b0b;
+    color: #ffffff;
+  }
+
+  
+
+  .roleSection {
+    margin-bottom: 4.5rem;
+  }
+
+  .roleSection h2 {
+    margin: 0 0 2.5rem;
+    border-left: 7px solid var(--color-primary);
+    padding-left: 2rem;
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    line-height: 1.1;
+  }
+
+  .contributorsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 3rem 4rem;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .contributor {
+    text-align: center;
+  }
+
+  .contributor img {
+    display: block;
+    width: 176px;
+    height: 190px;
+    margin: 0 auto 1.25rem;
+    border-radius: 0.6rem;
+    object-fit: cover;
+  }
+
+  .contributor h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+
+
+  
+
 </style>

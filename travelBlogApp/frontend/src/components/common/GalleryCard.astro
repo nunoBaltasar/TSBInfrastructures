@@ -5,6 +5,10 @@ interface Props {
   slug: string;
   description?: string;
   location?: string;
+  publishedAt: string;
+  authorName?: string;
+  authorImage?: string;
+  tags?: string[];
 }
 
 const {
@@ -13,21 +17,44 @@ const {
   slug,
   description,
   location,
+  publishedAt,
+  authorName,
+  authorImage,
+  tags,
 } = Astro.props as Props;
 ---
 
-<a class="galleryCard" href={`/gallery/${slug}`}>
+<button
+  type="button"
+  class="galleryCard"
+  data-gallery-image={image}
+  data-gallery-title={title}
+  data-gallery-description={description ?? ''}
+  data-gallery-location={location ?? ''}
+  data-gallery-published={publishedAt}
+  data-gallery-author={authorName ?? ''}
+  data-gallery-author-image={authorImage ?? ''}
+  data-gallery-tags={tags?.join('|') ?? ''}
+  aria-label={`Ampliar ${title}`}
+>
   <img src={image} alt={title} loading="lazy" />
 
   <div class="galleryCardOverlay">
     <h2>{title}</h2>
   </div>
-</a>
+</button>
 
 <style>
   :global(.galleryCard) {
     position: relative;
     display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: zoom-in;
     overflow: hidden;
     break-inside: avoid;
     margin-bottom: 24px;

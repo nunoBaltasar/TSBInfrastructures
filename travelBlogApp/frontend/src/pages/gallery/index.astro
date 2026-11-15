@@ -11,7 +11,9 @@ const galleryImagesResponse = await fetchApi<
 >({
   endpoint: 'gallery-images',
   query: {
-    populate: 'image',
+    'populate[image]': 'true',
+    'populate[author][populate][0]': 'profileImage',
+    'populate[tags]': 'true',
     sort: 'publishedAt:desc',
     'pagination[page]': '1',
     'pagination[pageSize]': String(galleryPageSize),
@@ -52,6 +54,15 @@ const getMediaUrl = (url: string) =>
             title={galleryImage.title}
             description={galleryImage.description}
             location={galleryImage.location}
+            publishedAt={galleryImage.publishedAt}
+            authorName={galleryImage.author?.name}
+            tags={galleryImage.tags?.map((tag) => tag.name)}
+            authorImage={galleryImage.author?.profileImage
+              ? getMediaUrl(
+                  galleryImage.author.profileImage.formats?.thumbnail?.url ??
+                    galleryImage.author.profileImage.url
+                )
+              : undefined}
             slug={galleryImage.slug}
             image={getMediaUrl(
               galleryImage.image.formats?.large?.url ??
@@ -62,6 +73,48 @@ const getMediaUrl = (url: string) =>
         ) : null
       )}
     </section>
+
+    <dialog class="galleryDialog" data-gallery-dialog>
+      <div class="galleryDialogContent">
+        <header class="galleryDialogHeader">
+          <div class="DialogAuthor">
+              <img class = "pfp"data-gallery-dialog-author-image alt="" />
+              <div class="galleryDialogAuthor">
+                <h2 data-gallery-dialog-title></h2>
+                <p data-gallery-dialog-author></p>
+              </div>
+          </div>
+          <button type="button" class="galleryDialogClose" data-gallery-dialog-close aria-label="Fechar">
+            ×
+          </button>
+        </header>
+        <div class="galleryDialogImageContainer">
+          <img data-gallery-dialog-image alt="" />
+        </div>
+          <div class = "dialogMeta">
+            <div class = "location">
+              <svg  xmlns="http://www.w3.org/2000/svg" width="24" height="24"  
+              fill="currentColor" viewBox="0 0 24 24" >
+              <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
+              <path d="M11.42 21.81c.17.12.38.19.58.19s.41-.06.58-.19c.3-.22 7.45-5.37 7.42-11.82 0-4.41-3.59-8-8-8s-8 3.59-8 8c-.03 6.45 7.12 11.6 7.42 11.82M12 4c3.31 0 6 2.69 6 6 .02 4.44-4.39 8.43-6 9.74-1.61-1.31-6.02-5.29-6-9.74 0-3.31 2.69-6 6-6"></path>
+              </svg>
+              <span data-gallery-dialog-location></span>
+            </div>
+            <div class  = "date">
+              <svg  xmlns="http://www.w3.org/2000/svg" width="24" height="24"  
+              fill="currentColor" viewBox="0 0 24 24" >
+              <!--Boxicons v3.0.8 https://boxicons.com | License  https://docs.boxicons.com/free-->
+              <path d="M19 4h-2V2h-2v2H9V2H7v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2M5 20V8h14V6v14z"></path>
+              </svg>
+              <p data-gallery-dialog-published></p>
+            </div>
+            <div class="galleryDialogTags" data-gallery-dialog-tags></div>
+            <p data-gallery-dialog-description></p>
+            
+          </div>
+      </div>
+    </dialog>
+
     {galleryImagesResponse.meta.pagination.pageCount > 1 && (
       <div class="gallerySentinel" data-gallery-sentinel aria-live="polite">
         Loading more photos...
@@ -83,6 +136,20 @@ const getMediaUrl = (url: string) =>
   interface GalleryApiImage {
     title: string;
     slug: string;
+    description?: string;
+    location?: string;
+    publishedAt: string;
+    tags?: {
+      name: string;
+    }[] | null;
+    author?: {
+      name: string;
+      profileImage?: {
+        url: string;
+        alternativeText?: string | null;
+        formats?: Record<string, GalleryMediaFormat>;
+      } | null;
+    } | null;
     image: GalleryMedia | null;
   }
 
@@ -102,7 +169,9 @@ const getMediaUrl = (url: string) =>
     pageSize: number,
   ): Promise<GalleryApiResponse> => {
     const query = new URLSearchParams({
-      populate: 'image',
+      'populate[image]': 'true',
+      'populate[author][populate][0]': 'profileImage',
+      'populate[tags]': 'true',
       sort: 'publishedAt:desc',
       'pagination[page]': String(page),
       'pagination[pageSize]': String(pageSize),
@@ -119,7 +188,7 @@ const getMediaUrl = (url: string) =>
   const createGalleryCard = (
     galleryImage: GalleryApiImage,
     strapiUrl: string,
-  ): HTMLAnchorElement | null => {
+  ): HTMLButtonElement | null => {
     if (!galleryImage.image) {
       return null;
     }
@@ -128,14 +197,33 @@ const getMediaUrl = (url: string) =>
       galleryImage.image.formats?.large?.url ??
       galleryImage.image.formats?.medium?.url ??
       galleryImage.image.url;
-    const card = document.createElement('a');
+    const card = document.createElement('button');
     card.className = 'galleryCard';
-    card.href = `/gallery/${galleryImage.slug}`;
-
-    const image = document.createElement('img');
-    image.src = imageUrl.startsWith('http')
+    card.type = 'button';
+    card.setAttribute('aria-label', `Ampliar ${galleryImage.title}`);
+    card.dataset.galleryImage = imageUrl.startsWith('http')
       ? imageUrl
       : `${strapiUrl}${imageUrl}`;
+    card.dataset.galleryTitle = galleryImage.title;
+    card.dataset.galleryDescription = galleryImage.description ?? '';
+    card.dataset.galleryLocation = galleryImage.location ?? '';
+    card.dataset.galleryPublished = galleryImage.publishedAt;
+    card.dataset.galleryTags = Array.isArray(galleryImage.tags)
+      ? galleryImage.tags.map((tag) => tag.name).join('|')
+      : '';
+    card.dataset.galleryAuthor = galleryImage.author?.name ?? '';
+    const authorImageUrl = galleryImage.author?.profileImage
+      ? galleryImage.author.profileImage.formats?.thumbnail?.url ??
+        galleryImage.author.profileImage.url
+      : '';
+    card.dataset.galleryAuthorImage = authorImageUrl.startsWith('http')
+      ? authorImageUrl
+      : authorImageUrl
+        ? `${strapiUrl}${authorImageUrl}`
+        : '';
+
+    const image = document.createElement('img');
+    image.src = card.dataset.galleryImage;
     image.alt = galleryImage.title;
     image.loading = 'lazy';
 
@@ -195,7 +283,7 @@ const getMediaUrl = (url: string) =>
           );
           const cards = response.data
             .map((galleryImage) => createGalleryCard(galleryImage, strapiUrl))
-            .filter((card): card is HTMLAnchorElement => card !== null);
+            .filter((card): card is HTMLButtonElement => card !== null);
 
           grid.append(...cards);
           currentPage = nextPage;
@@ -217,6 +305,99 @@ const getMediaUrl = (url: string) =>
     observer.observe(sentinel);
   };
 
+  const initializeGalleryDialog = () => {
+    const dialog = document.querySelector<HTMLDialogElement>('[data-gallery-dialog]');
+    const image = document.querySelector<HTMLImageElement>('[data-gallery-dialog-image]');
+    const title = document.querySelector<HTMLElement>('[data-gallery-dialog-title]');
+    const author = document.querySelector<HTMLElement>('[data-gallery-dialog-author]');
+    const authorImage = document.querySelector<HTMLImageElement>(
+      '[data-gallery-dialog-author-image]',
+    );
+    const location = document.querySelector<HTMLElement>('[data-gallery-dialog-location]');
+    const published = document.querySelector<HTMLElement>('[data-gallery-dialog-published]');
+    const description = document.querySelector<HTMLElement>('[data-gallery-dialog-description]');
+    const tags = document.querySelector<HTMLElement>('[data-gallery-dialog-tags]');
+    const closeButton = document.querySelector<HTMLButtonElement>('[data-gallery-dialog-close]');
+
+    if (
+      !dialog ||
+      !image ||
+      !title ||
+      !author ||
+      !authorImage ||
+      !location ||
+      !published ||
+      !description ||
+      !tags ||
+      !closeButton
+    ) {
+      return;
+    }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      const card =
+        target instanceof Element
+          ? target.closest<HTMLElement>('[data-gallery-image]')
+          : null;
+
+      if (!card) {
+        return;
+      }
+
+      event.preventDefault();
+      image.classList.remove('isZoomed');
+      image.setAttribute('aria-label', 'Ampliar imagem');
+      image.src = card.dataset.galleryImage ?? '';
+      image.alt = card.dataset.galleryTitle ?? '';
+      title.textContent = card.dataset.galleryTitle ?? '';
+      author.textContent = card.dataset.galleryAuthor
+        ? `By ${card.dataset.galleryAuthor}`
+        : '';
+      authorImage.src = card.dataset.galleryAuthorImage ?? '';
+      authorImage.alt = card.dataset.galleryAuthor ?? '';
+      authorImage.hidden = !card.dataset.galleryAuthorImage;
+      location.textContent = card.dataset.galleryLocation ?? '';
+      published.textContent = card.dataset.galleryPublished
+        ? `Published on ${new Intl.DateTimeFormat('en', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          }).format(new Date(card.dataset.galleryPublished))}`
+        : '';
+      description.textContent = card.dataset.galleryDescription ?? '';
+      tags.replaceChildren(
+        ...(card.dataset.galleryTags ?? '')
+          .split('|')
+          .filter(Boolean)
+          .map((tag) => {
+            const tagElement = document.createElement('span');
+            tagElement.textContent = `${tag}`;
+            return tagElement;
+          }),
+      );
+      dialog.showModal();
+    });
+
+    image.addEventListener('click', () => {
+      const isZoomed = image.classList.toggle('isZoomed');
+      image.setAttribute(
+        'aria-label',
+        isZoomed ? 'Reduzir imagem' : 'Ampliar imagem',
+      );
+    });
+
+    closeButton.addEventListener('click', () => {
+      image.classList.remove('isZoomed');
+      dialog.close();
+    });
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) {
+        dialog.close();
+      }
+    });
+  };
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeGallery, {
       once: true,
@@ -224,6 +405,8 @@ const getMediaUrl = (url: string) =>
   } else {
     initializeGallery();
   }
+
+  initializeGalleryDialog();
 </script>
 
 <style>
@@ -267,5 +450,137 @@ const getMediaUrl = (url: string) =>
     margin: 0 auto;
   }
 
+  .galleryDialog {
+    width: min(96%, 1152px);
+    max-height: 94vh;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: #ffffff;
+    scrollbar-width: none; /* Deixa a barra de rolagem fina */
+  }
+
+  .galleryDialog::backdrop {
+    background: rgb(0 0 0 / 70%);
+  }
+
+  .galleryDialogContent {
+    display: flex;
+    max-height: 94vh;
+    flex-direction: column;
+  }
+
+  .galleryDialogHeader{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+  }
+
+  .galleryDialogHeader {
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .galleryDialogHeader h2,
+  .galleryDialogHeader p,
+  .galleryDialogFooter p {
+    margin: 0;
+  }
+  .galleryDialogHeader{
+    
+  }
+  .DialogAuthor{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  .galleryDialogAuthor {
+    align-items: center;
+    margin-left: 1rem;
+  }
+  .galleryDialogAuthor p{
+    margin-top: -5px;
+  }
+
+  .pfp {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 9999px;
+    object-fit: cover;
+  }
+
+  .galleryDialogHeader h2 {
+    color: #0f172a;
+    font-size: 1.55rem;
+  }
+
+  .galleryDialogHeader p {
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+
+  .galleryDialogClose {
+    border: 0;
+    border-radius: 9999px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 2rem;
+    line-height: 1;
+    padding: 0.25rem 0.75rem;
+  }
+
+  .galleryDialogImageContainer {
+    padding: 1.5rem;
+  }
+
+  .galleryDialogImageContainer img {
+    display: block;
+    max-width: 100%;
+    max-height: calc(94vh - 220px);
+    width: auto;
+    margin: 0 auto;
+    object-fit: contain;
+    cursor: zoom-in;
+    transition: transform 0.3s ease;
+  }
+
+  .galleryDialogImageContainer img.isZoomed {
+    max-width: none;
+    max-height: none;
+    transform: scale(1.8);
+    cursor: zoom-out;
+  }
+
+  .dialogMeta{
+    padding: 0 1.5rem 1.5rem;
+  }
+
+  .dialogMeta p {
+    margin: 0.5rem 0 0;
+  }
+
+  .galleryDialogTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  :global(.galleryDialogTags span) {
+    border-radius: 3px;
+    background-color: var(--color-primary);
+    padding: 0.2rem 0.4rem;
+    color: #ffffff;
+    font-size: 0.875rem;
+  }
+
+  .location, .date{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.35rem;
+  }
 </style>
 

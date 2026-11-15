@@ -8,7 +8,9 @@ export async function getStaticPaths() {
   const response = await fetchApi<StrapiCollectionResponse<Article>>({
       endpoint: 'articles',
       query: {
-        populate: '*',
+        'populate[coverImage]': 'true',
+        'populate[author][populate][0]': 'profileImage',
+        'populate[tags]': 'true',
         'pagination[pageSize]': '100',
       },
     });
@@ -28,6 +30,7 @@ interface Props {
 }
 
 const { article } = Astro.props;
+const tags = Array.isArray(article.tags) ? article.tags : [];
 
 const strapiUrl = import.meta.env.STRAPI_URL;
 const getMediaUrl = (url: string) =>
@@ -37,8 +40,15 @@ const coverUrl = article.coverImage
   ? getMediaUrl(article.coverImage.formats?.large?.url ?? article.coverImage.url)
   : null;
 
+const authorImageUrl = article.author?.profileImage
+  ? getMediaUrl(
+      article.author.profileImage.formats?.thumbnail?.url ??
+        article.author.profileImage.url,
+    )
+  : null;
+
 const publicationDate = new Intl.DateTimeFormat(
-  'pt-PT',
+  'en',
   {
     day: 'numeric',
     month: 'long',
@@ -63,16 +73,34 @@ const publicationDate = new Intl.DateTimeFormat(
       <p>{article.summary}</p>
     </div>
   </header>
-  <article class="mx-auto max-w-4xl px-6 py-16">
-    <div class="flex items-center justify-between mb-6">
-      <div class="text-sm text-gray-500">
-        <span>By {article.author?.name ?? 'TravelBlog'}</span>
-        <span class="mx-2">|</span>
-        <span>{publicationDate}</span>
-      </div>
+  <article class="articleContent">
+    <div class="articleMeta">
+      <span class="authorInfo">
+        <span>Written by {article.author?.name ?? 'TravelBlog'}</span>
+        {authorImageUrl && (
+          <img
+            class="authorImage"
+            src={authorImageUrl}
+            alt={article.author?.profileImage?.alternativeText ?? article.author?.name ?? 'Author'}
+          />
+        )}
+      </span>
+      <span class="metaDivider" aria-hidden="true">|</span>
+      <time datetime={article.publishedAt}>{publicationDate}</time>
+      {
+        tags.length > 0 && (
+          <>
+            <span class="metaDivider" aria-hidden="true">|</span>
+            <div class="articleTags" aria-label="Tags">
+              {tags.map((tag) => <span class="articleTag">{tag.name}</span>)}
+            </div>
+          </>
+        )
+      }
     </div>
-    <div class="mt-12">
-      <StrapiBlocks content={article.content} mediaBaseUrl={strapiUrl} />
+
+    <div class="articleBlocks">
+      <StrapiBlocks content={article.content ?? []} mediaBaseUrl={strapiUrl} />
     </div>
   </article>
 </BaseLayout>
@@ -124,7 +152,59 @@ const publicationDate = new Intl.DateTimeFormat(
     margin: 32px auto 0;
   }
 
-  .mt12{
-    margin-top: 40px;
+  .articleContent {
+    width: min(100% - 64px, 1000px);
+    margin: 0 auto;
+    padding: 72px 0 96px;
   }
+
+  .articleMeta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 4rem;
+    color: #64748b;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  .metaDivider {
+    color: #cbd5e1;
+  }
+
+  .authorInfo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .authorImage {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    object-fit: cover;
+  }
+
+  .articleTags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.7rem;
+  }
+
+  .articleTag {
+    color: #ffffff;
+    font-weight: 500;
+    background-color: var(--color-primary);
+    border-radius: 3px;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .articleBlocks {
+    width: 100%;
+  }
+
+
 </style>

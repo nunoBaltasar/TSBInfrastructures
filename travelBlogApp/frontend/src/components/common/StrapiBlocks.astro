@@ -199,9 +199,10 @@ const renderedContent = content.map(renderBlock).join('');
   }
 
   .strapiBlocks :global(img) {
+    display: block;
+    margin: 0 auto;
     height: auto;
     max-width: 100%;
-    border-radius: 0.75rem;
   }
 
   .strapiBlocks :global(figcaption) {

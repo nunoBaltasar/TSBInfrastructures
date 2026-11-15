@@ -46,6 +46,13 @@
       "relation": "oneToOne",
       "target": "api::gallery-image.gallery-image",
       "inversedBy": "author"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user",
+      "required": true,
+      "mappedBy": "author"
     }
   }
 }

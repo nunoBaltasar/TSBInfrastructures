@@ -84,6 +84,7 @@ export interface GalleryImage {
   location?: string;
   publishedAt: string;
   image: StrapiMedia | null;
+  tags?: Tag[];
   author?: Author | null;
   articles?: Article[];
 }

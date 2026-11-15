@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import headerImage from '../../assets/waterfall.png';
+import fetchApi from '../../lib/strapi';
+import ArticleCard from '../../components/common/ArticleCard.astro';
+import type {
+  Article,
+  StrapiCollectionResponse,
+} from '../../interfaces/strapi';
+---
+
+
+<BaseLayout title="Contributors | TravelBlog">
+    <header>
+      <section style = {`background-image:
+      linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.9) 0%,   
+        rgba(0, 0, 0, 0.5) 50%,     
+        rgba(0, 0, 0, 0.75) 100%   
+      ),
+        url('${headerImage.src}'); background-size: 100% 100%; background-position: center; 
+        background-repeat: no-repeat; background-attachment: fixed;  height: 100vh; width: 100%;`}>
+        <div class = "left">
+          <h1>Contributors</h1>
+          <div class = "par">
+            <p>Meet the people behind the stories. </p> 
+            <i class="bx bx-right-arrow-circle"></i>
+          </div>
+        </div>
+      </section>
+    </header>
+    
+
+</BaseLayout>
+
+
+<style>
+
+  .left {
+    
+    padding: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+  }
+  .left h1 {
+    margin: 0;
+    font-size: 200px;
+    color: #ffffff;
+  }
+
+  .left p {
+    font-size: 20px;
+    color: #ffffff;
+  }
+</style>

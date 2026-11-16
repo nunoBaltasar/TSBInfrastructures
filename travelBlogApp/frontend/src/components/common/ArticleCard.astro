@@ -7,6 +7,7 @@ interface Props{
     author: string;
     publishedAt?: string;
 }
+import { getLocale, localizedPath, translations } from '../../lib/i18n';
 
 const {
     title,
@@ -16,13 +17,14 @@ const {
     author,
     publishedAt,
 } = Astro.props as Props;
+const t = translations[getLocale(Astro.url.pathname)];
 ---
 
 
 <article class = "articleCard">
     <img
       src={image}
-      alt={`Article image for ${title}`}
+      alt={`${t.articlesPage.readArticle}: ${title}`}
       class="articleImage"
     />
     <div class="articleContent">
@@ -30,8 +32,8 @@ const {
 
         <p class="articleDescription">{description}</p>
 
-        <a class="readMore" href={`/articles/${slug}`}>
-        Read article
+        <a class="readMore" href={localizedPath(getLocale(Astro.url.pathname), `/articles/${slug}`)}>
+        {t.articlesPage.readArticle}
         </a>
     </div>
 </article>

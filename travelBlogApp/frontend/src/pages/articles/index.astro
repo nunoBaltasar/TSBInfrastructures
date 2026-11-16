@@ -7,10 +7,14 @@ import type {
   Article,
   StrapiCollectionResponse,
 } from '../../interfaces/strapi';
+import { getLocale, translations } from '../../lib/i18n';
 
+const locale = getLocale(Astro.url.pathname);
+const t = translations[locale];
 const articlesResponse = await fetchApi<StrapiCollectionResponse<Article>>(
   {
     endpoint: 'articles',
+    locale,
     query: {
       populate: 'coverImage',
       sort: 'publishedAt:desc',
@@ -26,7 +30,7 @@ const getMediaUrl = (url: string) =>
 
 ---
 
-<BaseLayout title="Articles | TravelBlog">
+<BaseLayout title={`${t.navigation.articles} | TravelBlog`}>
     <header>
       <section style = {`background-image:
       linear-gradient(
@@ -38,10 +42,9 @@ const getMediaUrl = (url: string) =>
         url('${headerImage.src}'); background-size: 100% 100%; background-position: center; 
         background-repeat: no-repeat; background-attachment: fixed;  height: 100vh; width: 100%;`}>
         <div class = "left">
-          <h1>Stories & <span>Guides</span></h1>
+          <h1>{t.articlesPage.title} <span>{t.articlesPage.titleAccent}</span></h1>
           <div class = "par">
-            <p>Discover the best travel experiences and tips.
-            Check on our latest article published. </p> 
+            <p>{t.articlesPage.description}</p> 
             <i class="bx bx-right-arrow-circle"></i>
           </div>
           
@@ -56,14 +59,14 @@ const getMediaUrl = (url: string) =>
                   slug={latestArticle.slug}
                   image={getMediaUrl(latestArticle.coverImage.url)}
                   author={latestArticle.author?.name ?? 'TravelBlog'}
-                  publishedAt={new Date(latestArticle.publishedAt).toLocaleDateString('pt-PT')}
+                  publishedAt={new Date(latestArticle.publishedAt).toLocaleDateString(locale === 'pt' ? 'pt-PT' : 'en-US')}
                 />
               </div>
             </section>
           )}
       </section>
       <div class="articlesList">
-        <h2>All <span>Articles</span></h2>
+        <h2>{t.articlesPage.allTitle} <span>{t.articlesPage.allTitleAccent}</span></h2>
 
         <div class="articlesGrid">
           {articlesResponse.data.slice(1, 11).map((article) =>
@@ -75,7 +78,7 @@ const getMediaUrl = (url: string) =>
                   slug={article.slug}
                   image={getMediaUrl(article.coverImage.url)}
                   author={article.author?.name ?? 'TravelBlog'}
-                  publishedAt={new Date(article.publishedAt).toLocaleDateString('pt-PT')}
+                  publishedAt={new Date(article.publishedAt).toLocaleDateString(locale === 'pt' ? 'pt-PT' : 'en-US')}
                 />
               </div>
             ) : null

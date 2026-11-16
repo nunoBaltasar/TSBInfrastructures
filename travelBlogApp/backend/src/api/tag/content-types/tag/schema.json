@@ -29,6 +29,7 @@
       "type": "uid",
       "targetField": "name",
       "required": true,
+      "maxLength": 50,
       "regex": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
     "articles": {

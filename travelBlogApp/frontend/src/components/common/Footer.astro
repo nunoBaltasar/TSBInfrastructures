@@ -1,14 +1,20 @@
 
 
+---
+import { getLocale, translations } from '../../lib/i18n';
+
+const t = translations[getLocale(Astro.url.pathname)].footer;
+---
+
 
 <footer class = "footer">    
-    <h3>Create, Explore & Share</h3>
+    <h3>{t.tagline}</h3>
     <div class = "rights">
         <div class = "links">
-            <a href= "#"> Privacy Policy </a>
-            <a href= "#"> Cooperation</a>
-            <a href= "#"> Sponsorship</a>
-            <a href= "#"> Contact Us</a>  
+            <a href= "#"> {t.privacy} </a>
+            <a href= "#"> {t.cooperation}</a>
+            <a href= "#"> {t.sponsorship}</a>
+            <a href= "#"> {t.contact}</a>
         </div>
         <div class = "socials">
             <a href = "#"><i class = 'bx bxl-facebook'></i></a>
@@ -16,7 +22,7 @@
             <a href = "#"><i class = 'bx bxl-instagram'></i></a>
             <a href = "#"><i class = 'bx bxl-youtube'></i></a>
         </div>
-        <p>Copyright &copy; 2026 Travel Blog. All rights reserved.</p>
+        <p>Copyright &copy; 2026 Travel Blog. {t.copyright}</p>
 
     </div>
     

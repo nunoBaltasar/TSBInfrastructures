@@ -34,6 +34,7 @@
       },
       "targetField": "title",
       "required": true,
+      "maxLength": 50,
       "regex": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
     "content": {

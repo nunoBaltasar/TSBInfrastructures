@@ -9,10 +9,19 @@
   "options": {
     "draftAndPublish": true
   },
-  "pluginOptions": {},
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
   "attributes": {
     "name": {
       "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
       "maxLength": 50,
       "required": true,
       "unique": false
@@ -21,14 +30,25 @@
       "type": "uid",
       "targetField": "name",
       "required": true,
+      "maxLength": 50,
       "regex": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
     "biography": {
       "type": "richtext",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
       "maxLength": 300
     },
     "profileImage": {
       "type": "media",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
       "multiple": false,
       "required": true,
       "allowedTypes": [

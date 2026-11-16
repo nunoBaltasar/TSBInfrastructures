@@ -1,4 +1,6 @@
 ---
+import { getLocale, translations } from '../../lib/i18n';
+
 interface Props {
   title: string;
   image: string;
@@ -22,6 +24,8 @@ const {
   authorImage,
   tags,
 } = Astro.props as Props;
+
+const t = translations[getLocale(Astro.url.pathname)];
 ---
 
 <button
@@ -35,7 +39,7 @@ const {
   data-gallery-author={authorName ?? ''}
   data-gallery-author-image={authorImage ?? ''}
   data-gallery-tags={tags?.join('|') ?? ''}
-  aria-label={`Ampliar ${title}`}
+  aria-label={`${t.galleryPage.enlarge}: ${title}`}
 >
   <img src={image} alt={title} loading="lazy" />
 

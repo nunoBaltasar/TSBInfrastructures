@@ -494,6 +494,9 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
         i18n: {
           localized: true;
         };
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 50;
       }>;
     summary: Schema.Attribute.Text &
       Schema.Attribute.Required &
@@ -532,11 +535,21 @@ export interface ApiAuthorAuthor extends Struct.CollectionTypeSchema {
   options: {
     draftAndPublish: true;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
     admin_user: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Required;
     articles: Schema.Attribute.Relation<'oneToOne', 'api::article.article'>;
     biography: Schema.Attribute.RichText &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 300;
       }>;
@@ -547,21 +560,31 @@ export interface ApiAuthorAuthor extends Struct.CollectionTypeSchema {
       'oneToOne',
       'api::gallery-image.gallery-image'
     >;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::author.author'
-    > &
-      Schema.Attribute.Private;
+    locale: Schema.Attribute.String;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::author.author'>;
     name: Schema.Attribute.String &
       Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 50;
       }>;
     profileImage: Schema.Attribute.Media<'images' | 'files'> &
-      Schema.Attribute.Required;
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     publishedAt: Schema.Attribute.DateTime;
-    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    slug: Schema.Attribute.UID<'name'> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 50;
+      }>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -579,6 +602,11 @@ export interface ApiGalleryImageGalleryImage
   options: {
     draftAndPublish: true;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
     articles: Schema.Attribute.Relation<'oneToMany', 'api::article.article'>;
     author: Schema.Attribute.Relation<'oneToOne', 'api::author.author'> &
@@ -586,20 +614,51 @@ export interface ApiGalleryImageGalleryImage
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    description: Schema.Attribute.Text & Schema.Attribute.Required;
+    description: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 250;
+      }>;
     image: Schema.Attribute.Media<'images' | 'files'> &
-      Schema.Attribute.Required;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    locale: Schema.Attribute.String;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::gallery-image.gallery-image'
-    > &
-      Schema.Attribute.Private;
-    location: Schema.Attribute.String;
+    >;
+    location: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     publishedAt: Schema.Attribute.DateTime;
-    slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
+    slug: Schema.Attribute.UID<'title'> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 50;
+      }>;
     tags: Schema.Attribute.Relation<'manyToMany', 'api::tag.tag'>;
-    title: Schema.Attribute.String & Schema.Attribute.Required;
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 30;
+      }>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -641,7 +700,11 @@ export interface ApiTagTag extends Struct.CollectionTypeSchema {
         };
       }>;
     publishedAt: Schema.Attribute.DateTime;
-    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    slug: Schema.Attribute.UID<'name'> &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 50;
+      }>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

@@ -1,0 +1,34 @@
+---
+import Page from '../../articles/[slug].astro';
+import fetchApi from '../../../lib/strapi';
+import type { Article, StrapiCollectionResponse } from '../../../interfaces/strapi';
+import type { Locale } from '../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const paths = [];
+
+  for (const locale of ['pt', 'en'] as Locale[]) {
+    const response = await fetchApi<StrapiCollectionResponse<Article>>({
+      endpoint: 'articles',
+      locale,
+      query: {
+        'populate[coverImage]': 'true',
+        'populate[author][populate][0]': 'profileImage',
+        'populate[tags]': 'true',
+        'pagination[pageSize]': '100',
+      },
+    });
+
+    paths.push(
+      ...response.data.map((article) => ({
+        params: { lang: locale, slug: article.slug },
+        props: { article },
+      })),
+    );
+  }
+
+  return paths;
+}
+---
+
+<Page article={Astro.props.article} />

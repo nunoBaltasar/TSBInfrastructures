@@ -8,11 +8,16 @@ import type {
   GalleryImage,
   StrapiCollectionResponse,
 } from '../interfaces/strapi';
+import { getLocale } from '../lib/i18n';
+import { localizedPath, translations } from '../lib/i18n';
 
+const locale = getLocale(Astro.url.pathname);
+const t = translations[locale];
 
 const authorsResponse = await fetchApi<StrapiCollectionResponse<Author>>(
   {
     endpoint: 'authors',
+    locale,
     query: {
       'pagination[pageSize]': '1',
     },
@@ -21,6 +26,7 @@ const authorsResponse = await fetchApi<StrapiCollectionResponse<Author>>(
 const articlesResponse = await fetchApi<StrapiCollectionResponse<Article>>(
   {
     endpoint: 'articles',
+    locale,
     query: {
       'pagination[pageSize]': '1',
     },
@@ -30,6 +36,7 @@ const galleryImagesResponse = await fetchApi<
   StrapiCollectionResponse<GalleryImage>
 >({
   endpoint: 'gallery-images',
+  locale,
   query: {
     populate: 'image',
     sort: 'publishedAt:desc',
@@ -58,43 +65,40 @@ const getMediaUrl = (url: string) =>
     url('${headerImage.src}'); background-size: cover; 
     background-repeat: no-repeat; background-attachment: fixed;  height: 100vh; width: 100%;`}>
       <div class = "left">
-        <h1>Explore <span>Travel Blog</span></h1>
-        <p>Discover the world through our travel stories and guides.</p>
+        <h1>{t.home.heroTitle} <span>{t.home.heroTitleAccent}</span></h1>
+        <p>{t.home.heroDescription}</p>
         
-        <a href = "/articles">
+        <a href={localizedPath(locale, '/articles')}>
           <i class = 'bx bx-compass'></i>
-          <span> Explore Now </span>
+          <span> {t.home.explore} </span>
         </a>
       </div>
     </section>
     <div class = "about">
-      <h2>About <span>Us</span></h2>
+      <h2>{t.home.aboutTitle} <span>{t.home.aboutTitleAccent}</span></h2>
       <div class = "about-us"> 
         <div class = "about-content">
           <p>
-            Welcome to TravelBlog, your ultimate destination for travel inspiration and information. 
-            Our team of passionate travelers is dedicated to sharing their experiences, tips, and guides to help you plan your next adventure. 
-            Whether you're a seasoned traveler or just starting out, we have something for everyone. 
-            Join us as we explore the world, one destination at a time.
+            {t.home.aboutDescription}
           </p>
         </div>
         <div class = "about-buttons">
-          <a class = "authors" href = "/authors">
+          <a class = "authors" href={localizedPath(locale, '/contributors')}>
             <span>{totalAuthors}</span>
-            <span>Current</span> 
-            <span>Authors</span>
+            <span>{t.home.current}</span> 
+            <span>{t.home.authors}</span>
           </a>
-          <a href = "/articles">
+          <a href={localizedPath(locale, '/articles')}>
             <span>{totalArticles}</span>
-            <span>Total</span> 
-            <span>Articles</span>
+            <span>{t.home.total}</span> 
+            <span>{t.home.articles}</span>
           </a>
         </div>
       </div>
     </div>
 
     <section class = "galleryShow">
-      <h2>Some of our <span>photos</span></h2>
+      <h2>{t.home.photosTitle} <span>{t.home.photosTitleAccent}</span></h2>
       <div class="carousel">
         <button class="carousel-button previous">
           <i class="bx bx-chevron-left"></i>
@@ -104,7 +108,7 @@ const getMediaUrl = (url: string) =>
           <div class="carousel-track">
             {galleryImages.map((galleryImage) =>
               galleryImage.image ? (
-                <a class="carousel-item" href={`/gallery/${galleryImage.slug}`}>
+                <a class="carousel-item" href={localizedPath(locale, `/gallery/${galleryImage.slug}`)}>
                   <img
                     src={getMediaUrl(
                       galleryImage.image.formats?.medium?.url ?? galleryImage.image.url
@@ -225,7 +229,7 @@ const getMediaUrl = (url: string) =>
   }
 
   section .left {
-    width: 700px;
+    width: 800px;
   }
 
   section .left h1 {

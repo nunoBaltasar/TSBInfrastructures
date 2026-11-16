@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import StrapiBlocks from '../../components/common/StrapiBlocks.astro';
 import fetchApi from '../../lib/strapi';
 import type { Article, StrapiCollectionResponse } from '../../interfaces/strapi';
+import { getLocale, translations } from '../../lib/i18n';
 
 export async function getStaticPaths() {
   const response = await fetchApi<StrapiCollectionResponse<Article>>({
@@ -30,6 +31,8 @@ interface Props {
 }
 
 const { article } = Astro.props;
+const locale = getLocale(Astro.url.pathname);
+const t = translations[locale];
 const tags = Array.isArray(article.tags) ? article.tags : [];
 
 const strapiUrl = import.meta.env.STRAPI_URL;
@@ -48,7 +51,7 @@ const authorImageUrl = article.author?.profileImage
   : null;
 
 const publicationDate = new Intl.DateTimeFormat(
-  'en',
+  locale === 'pt' ? 'pt-PT' : 'en',
   {
     day: 'numeric',
     month: 'long',
@@ -76,12 +79,12 @@ const publicationDate = new Intl.DateTimeFormat(
   <article class="articleContent">
     <div class="articleMeta">
       <span class="authorInfo">
-        <span>Written by {article.author?.name ?? 'TravelBlog'}</span>
+        <span>{t.articlePage.writtenBy} {article.author?.name ?? 'TravelBlog'}</span>
         {authorImageUrl && (
           <img
             class="authorImage"
             src={authorImageUrl}
-            alt={article.author?.profileImage?.alternativeText ?? article.author?.name ?? 'Author'}
+            alt={article.author?.profileImage?.alternativeText ?? article.author?.name ?? t.articlePage.author}
           />
         )}
       </span>
@@ -91,7 +94,7 @@ const publicationDate = new Intl.DateTimeFormat(
         tags.length > 0 && (
           <>
             <span class="metaDivider" aria-hidden="true">|</span>
-            <div class="articleTags" aria-label="Tags">
+            <div class="articleTags" aria-label={t.articlePage.tags}>
               {tags.map((tag) => <span class="articleTag">{tag.name}</span>)}
             </div>
           </>

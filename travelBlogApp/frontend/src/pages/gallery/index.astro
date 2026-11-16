@@ -4,12 +4,16 @@ import fetchApi from '../../lib/strapi';
 import headerImage from '../../assets/friskymountains.png';
 import GalleryCard from '../../components/common/GalleryCard.astro';
 import type { GalleryImage, StrapiCollectionResponse } from '../../interfaces/strapi';
+import { getLocale, translations } from '../../lib/i18n';
 
+const locale = getLocale(Astro.url.pathname);
+const t = translations[locale];
 const galleryPageSize = 30;
 const galleryImagesResponse = await fetchApi<
   StrapiCollectionResponse<GalleryImage>
 >({
   endpoint: 'gallery-images',
+  locale,
   query: {
     'populate[image]': 'true',
     'populate[author][populate][0]': 'profileImage',
@@ -25,7 +29,7 @@ const getMediaUrl = (url: string) =>
   url.startsWith('http') ? url : `${strapiUrl}${url}`;
 ---
 
-<BaseLayout title="Gallery | TravelBlog">
+<BaseLayout title={`${t.galleryPage.title} | TravelBlog`}>
     
     <header class="galleryHeader">
         <section style =  {`background-image:
@@ -34,19 +38,26 @@ const getMediaUrl = (url: string) =>
         background-repeat: no-repeat; background-attachment: fixed;  height: 100vh; width: 100%;`
         }>
         
-            <h1>Gallery</h1>
-            <p>Explore our collection of travel photographs.</p>
+            <h1>{t.galleryPage.title}</h1>
+            <p>{t.galleryPage.description}</p>
         </section> 
     </header>
     <main class="galleryPage">
 
     <section
       class="galleryGrid"
-      aria-label="Travel gallery"
+      aria-label={t.galleryPage.ariaLabel}
       data-gallery-grid
       data-strapi-url={strapiUrl}
+      data-locale={locale}
       data-page-size={galleryPageSize}
       data-page-count={galleryImagesResponse.meta.pagination.pageCount}
+      data-loading-text={t.galleryPage.loading}
+      data-load-error-text={t.galleryPage.loadError}
+      data-published-on-text={t.galleryPage.publishedOn}
+      data-by-text={t.galleryPage.by}
+      data-enlarge-text={t.galleryPage.enlarge}
+      data-reduce-text={t.galleryPage.reduce}
     >
       {galleryImagesResponse.data.map((galleryImage) =>
         galleryImage.image ? (
@@ -84,7 +95,7 @@ const getMediaUrl = (url: string) =>
                 <p data-gallery-dialog-author></p>
               </div>
           </div>
-          <button type="button" class="galleryDialogClose" data-gallery-dialog-close aria-label="Fechar">
+          <button type="button" class="galleryDialogClose" data-gallery-dialog-close aria-label={t.galleryPage.close}>
             ×
           </button>
         </header>
@@ -117,7 +128,7 @@ const getMediaUrl = (url: string) =>
 
     {galleryImagesResponse.meta.pagination.pageCount > 1 && (
       <div class="gallerySentinel" data-gallery-sentinel aria-live="polite">
-        Loading more photos...
+        {t.galleryPage.loading}
       </div>
     )}
   </main>
@@ -167,8 +178,10 @@ const getMediaUrl = (url: string) =>
     strapiUrl: string,
     page: number,
     pageSize: number,
+    locale: string,
   ): Promise<GalleryApiResponse> => {
     const query = new URLSearchParams({
+      locale,
       'populate[image]': 'true',
       'populate[author][populate][0]': 'profileImage',
       'populate[tags]': 'true',
@@ -188,6 +201,7 @@ const getMediaUrl = (url: string) =>
   const createGalleryCard = (
     galleryImage: GalleryApiImage,
     strapiUrl: string,
+    enlargeText: string,
   ): HTMLButtonElement | null => {
     if (!galleryImage.image) {
       return null;
@@ -200,7 +214,7 @@ const getMediaUrl = (url: string) =>
     const card = document.createElement('button');
     card.className = 'galleryCard';
     card.type = 'button';
-    card.setAttribute('aria-label', `Ampliar ${galleryImage.title}`);
+    card.setAttribute('aria-label', `${enlargeText}: ${galleryImage.title}`);
     card.dataset.galleryImage = imageUrl.startsWith('http')
       ? imageUrl
       : `${strapiUrl}${imageUrl}`;
@@ -247,6 +261,14 @@ const getMediaUrl = (url: string) =>
     }
 
     const strapiUrl = grid.dataset.strapiUrl;
+    const locale = grid.dataset.locale ?? 'pt';
+    const loadingText = grid.dataset.loadingText ?? 'Loading more photos...';
+    const loadErrorText =
+      grid.dataset.loadErrorText ?? 'Unable to load more photos. Try again.';
+    const publishedOnText = grid.dataset.publishedOnText ?? 'Published on';
+    const byText = grid.dataset.byText ?? 'By';
+    const enlargeText = grid.dataset.enlargeText ?? 'Enlarge image';
+    const reduceText = grid.dataset.reduceText ?? 'Reduce image';
     const pageSize = Number(grid.dataset.pageSize);
     const pageCount = Number(grid.dataset.pageCount);
 
@@ -272,7 +294,7 @@ const getMediaUrl = (url: string) =>
         }
 
         isLoading = true;
-        sentinel.textContent = 'Loading more photos...';
+        sentinel.textContent = loadingText;
 
         try {
           const nextPage = currentPage + 1;
@@ -280,9 +302,12 @@ const getMediaUrl = (url: string) =>
             strapiUrl,
             nextPage,
             pageSize,
+            locale,
           );
           const cards = response.data
-            .map((galleryImage) => createGalleryCard(galleryImage, strapiUrl))
+            .map((galleryImage) =>
+              createGalleryCard(galleryImage, strapiUrl, enlargeText),
+            )
             .filter((card): card is HTMLButtonElement => card !== null);
 
           grid.append(...cards);
@@ -294,7 +319,7 @@ const getMediaUrl = (url: string) =>
           }
         } catch (error) {
           console.error('Unable to load more gallery photos.', error);
-          sentinel.textContent = 'Unable to load more photos. Try again.';
+          sentinel.textContent = loadErrorText;
         } finally {
           isLoading = false;
         }
@@ -306,6 +331,7 @@ const getMediaUrl = (url: string) =>
   };
 
   const initializeGalleryDialog = () => {
+    const grid = document.querySelector<HTMLElement>('[data-gallery-grid]');
     const dialog = document.querySelector<HTMLDialogElement>('[data-gallery-dialog]');
     const image = document.querySelector<HTMLImageElement>('[data-gallery-dialog-image]');
     const title = document.querySelector<HTMLElement>('[data-gallery-dialog-title]');
@@ -318,6 +344,11 @@ const getMediaUrl = (url: string) =>
     const description = document.querySelector<HTMLElement>('[data-gallery-dialog-description]');
     const tags = document.querySelector<HTMLElement>('[data-gallery-dialog-tags]');
     const closeButton = document.querySelector<HTMLButtonElement>('[data-gallery-dialog-close]');
+    const locale = grid?.dataset.locale ?? 'pt';
+    const byText = grid?.dataset.byText ?? 'By';
+    const publishedOnText = grid?.dataset.publishedOnText ?? 'Published on';
+    const enlargeText = grid?.dataset.enlargeText ?? 'Enlarge image';
+    const reduceText = grid?.dataset.reduceText ?? 'Reduce image';
 
     if (
       !dialog ||
@@ -347,19 +378,19 @@ const getMediaUrl = (url: string) =>
 
       event.preventDefault();
       image.classList.remove('isZoomed');
-      image.setAttribute('aria-label', 'Ampliar imagem');
+      image.setAttribute('aria-label', enlargeText);
       image.src = card.dataset.galleryImage ?? '';
       image.alt = card.dataset.galleryTitle ?? '';
       title.textContent = card.dataset.galleryTitle ?? '';
       author.textContent = card.dataset.galleryAuthor
-        ? `By ${card.dataset.galleryAuthor}`
+        ? `${byText} ${card.dataset.galleryAuthor}`
         : '';
       authorImage.src = card.dataset.galleryAuthorImage ?? '';
       authorImage.alt = card.dataset.galleryAuthor ?? '';
       authorImage.hidden = !card.dataset.galleryAuthorImage;
       location.textContent = card.dataset.galleryLocation ?? '';
       published.textContent = card.dataset.galleryPublished
-        ? `Published on ${new Intl.DateTimeFormat('en', {
+        ? `${publishedOnText} ${new Intl.DateTimeFormat(locale === 'pt' ? 'pt-PT' : 'en', {
             day: 'numeric',
             month: 'long',
             year: 'numeric',
@@ -383,7 +414,7 @@ const getMediaUrl = (url: string) =>
       const isZoomed = image.classList.toggle('isZoomed');
       image.setAttribute(
         'aria-label',
-        isZoomed ? 'Reduzir imagem' : 'Ampliar imagem',
+        isZoomed ? reduceText : enlargeText,
       );
     });
 

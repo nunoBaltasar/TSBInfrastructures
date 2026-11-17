@@ -1,0 +1,27 @@
+services:
+  backend:
+    image: ghcr.io/nunobaltasar/tsbinfrastructures:latest
+    container_name: tsbinfrastructures
+    restart: unless-stopped
+
+    env_file:
+      - ./backend.env
+
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 1337
+      DATABASE_CLIENT: sqlite
+      DATABASE_FILENAME: /opt/app/data/data.db
+
+    ports:
+      - "1337:1337"
+
+    volumes:
+      - travel-blog-data:/opt/app/data
+      - travel-blog-uploads:/opt/app/public/uploads
+
+volumes:
+  travel-blog-data:
+  travel-blog-uploads:
+

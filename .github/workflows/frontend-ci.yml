@@ -6,16 +6,16 @@ on:
   pull_request:
     branches:
       - main
-    #paths:
-    #  - "frontend/**"
-    #  - ".github/workflows/frontend-ci.yml"
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
 
   push:
     branches:
       - main
-    #paths:
-    #  - "frontend/**"
-    #  - ".github/workflows/frontend-ci.yml"
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
 
 permissions:
   contents: read

@@ -80,8 +80,6 @@ $RECYCLE.BIN/
 ssl
 .idea
 nbproject
-public/uploads/*
-!public/uploads/.gitkeep
 .tsbuildinfo
 .eslintcache
 
@@ -123,9 +121,6 @@ coverage
 
 .env
 # adicionado
-.env.*
-#adicionado
-!.env.example
 
 license.txt
 exports

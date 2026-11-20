@@ -240,7 +240,8 @@ Therefore:
 - `backend/.tmp/data.db` is seen inside the container as `/opt/app/data/data.db`;
 - `backend/public/uploads/` is seen as `/opt/app/public/uploads/`.
 
-The existing local SQLite database and uploads remain available after the container is recreated. On a newly cloned repository, these locations are empty, so Strapi starts with a new database and requests the creation of the first administrator account.
+The existing SQLite database and uploaded media are included in the repository. Docker Compose bind-mounts these files into the container, allowing Strapi to use the prepared content, users, roles, permissions and media. Because the data is stored on the host rather than inside the container, it remains available when the container is stopped, removed or recreated.
+After cloning the repository and creating the required environment files, the evaluator can start the backend with the prepared database and content. A new administrator registration is only requested if backend/.tmp/data.db is missing, empty or mounted at an incorrect path.
 
 ## 4. CI/CD behaviour
 
@@ -307,7 +308,45 @@ Articles, gallery entries, authors, tags, administrative users, roles and permis
 
 At the current stage of the project, a content change only appears on the deployed static frontend after a new Cloudflare build is started. Automatic Strapi-to-Cloudflare rebuilds are not yet configured.
 
+## 5. Cloudflare Page
+The current website was deployed through Cloudflare Pages & Workes and can be accessed by using the domain
+`tsbinfrastructures.baltasarcnpt.workers.dev`.
+Unfortunately, the next step can only be done by the owner of of the project, since it relies on his Cloudflare Dashboard account.
+However, it will also be included an explanation on how to update the cloudflare deployed page
+
 ## 5. Temporary public backend for Cloudflare builds
+AS mentioned before, the website is currently published. To make some changes, you need to use a cloudflare tunnel to extablish communication with the localhosted backend and cloudflare.
+start with:
+
+```bash
+docker compose -f docker-compose.production.yml up -d
+```
+
+In another terminal, start the Tunnel:
+
+```bash
+cloudflared tunnel --url http://localhost:1337
+```
+
+Cloudflare returns an address similar to:
+
+```text
+https://example-name.trycloudflare.com
+```
+
+
+The `cloudflared` terminal and the Docker backend must remain running while GitHub or Cloudflare builds the frontend.
+
+A Quick Tunnel normally receives a different URL after it is restarted. When this happens, update `STRAPI_URL` in:
+
+1. Cloudflare project settings, under Variables and Secrets.
+
+A new Cloudflare deployment is then required because the previously generated pages retain the old backend and media URLs.
+
+To actually see the changes, you can just commit and push the changes, and they will automatically be triggered.
+
+
+
 
 The GitHub runner and Cloudflare build servers cannot access `http://localhost:1337` on the developer's computer. A Cloudflare Quick Tunnel temporarily exposes the local Strapi backend.
 
@@ -329,11 +368,6 @@ Cloudflare returns an address similar to:
 https://example-name.trycloudflare.com
 ```
 
-Verify the API before starting a remote build:
-
-```text
-https://example-name.trycloudflare.com/api/articles?populate=*
-```
 
 The `cloudflared` terminal and the Docker backend must remain running while GitHub or Cloudflare builds the frontend.
 
@@ -381,13 +415,5 @@ docker login ghcr.io
 docker compose -f docker-compose.production.yml pull
 docker compose -f docker-compose.production.yml up -d
 ```
-
-The server would also require:
-
-- a private `backend.env` file;
-- persistent storage for SQLite and uploads;
-- a public address;
-- HTTPS, normally through Caddy or Nginx.
-
 This procedure is documented as the intended production deployment, but it has not been validated on a permanent public Linux server.
 

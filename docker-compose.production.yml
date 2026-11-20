@@ -20,10 +20,4 @@ services:
     volumes:
       - ./backend/.tmp:/opt/app/data
       - ./backend/public/uploads:/opt/app/public/uploads
-    #  - travel-blog-data:/opt/app/data
-    #  - travel-blog-uploads:/opt/app/public/uploads
-
-#volumes:
-#  travel-blog-data:
-#  travel-blog-uploads:
 

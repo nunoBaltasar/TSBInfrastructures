@@ -206,5 +206,25 @@ const publicationDate = new Intl.DateTimeFormat(
     width: 100%;
   }
 
+  @media (max-width: 760px) {
+    .heroOverlayContent {
+      width: calc(100% - 32px);
+      padding: 40px 16px;
+    }
+
+    .heroOverlayContent h1 {
+      font-size: clamp(42px, 14vw, 68px);
+    }
+
+    .heroOverlayContent p {
+      font-size: 16px;
+      margin-top: 20px;
+    }
+
+    .articleContent {
+      width: calc(100% - 32px);
+      padding: 48px 0;
+    }
+  }
 
 </style>

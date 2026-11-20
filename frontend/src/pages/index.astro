@@ -360,6 +360,95 @@ const galleryImages = galleryImagesResponse.data;
     transition: transform 0.5s ease;
   }
 
+  @media (max-width: 1100px) {
+    section {
+      padding: 0 32px;
+    }
+
+    section .left {
+      width: 100%;
+    }
+
+    section .left h1,
+    header .about h2 {
+      font-size: clamp(48px, 9vw, 72px);
+    }
+
+    section .left p {
+      margin-left: 0;
+    }
+
+    header .about h2,
+    header p {
+      padding-inline: 32px;
+    }
+
+    .about-us {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .about-buttons {
+      width: calc(100% - 64px);
+      margin: 24px auto 0;
+    }
+
+    .carousel {
+      padding-inline: 32px;
+    }
+  }
+
+  @media (max-width: 760px) {
+    section {
+      min-height: 100vh;
+      padding: 100px 20px 40px;
+    }
+
+    section .left h1,
+    header .about h2,
+    .galleryShow h2 {
+      font-size: clamp(38px, 12vw, 56px);
+    }
+
+    section .left p,
+    header p {
+      font-size: 16px;
+    }
+
+    section .left a {
+      font-size: 24px;
+    }
+
+    header .about h2,
+    header p,
+    .galleryShow h2 {
+      padding-inline: 20px;
+    }
+
+    .about-buttons {
+      width: calc(100% - 40px);
+    }
+
+    .about-buttons a {
+      font-size: 22px;
+    }
+
+    .galleryShow {
+      margin-top: 64px;
+    }
+
+    .carousel {
+      gap: 6px;
+      padding: 20px 8px;
+    }
+
+    .carousel-button {
+      position: relative;
+      z-index: 2;
+      flex: 0 0 40px;
+    }
+  }
+
   .carousel-item {
     flex: 0 0 calc((100% - 120px) / 5);
     max-width: none;

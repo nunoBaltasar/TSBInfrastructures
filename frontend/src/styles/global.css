@@ -32,6 +32,13 @@ img{
 
 body{
     background-color: #ffffff;
+    overflow-x: hidden;
+}
+
+img,
+video,
+iframe {
+    max-width: 100%;
 }
 /* header */
 

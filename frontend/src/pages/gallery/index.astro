@@ -523,6 +523,53 @@ const availableTags = tagsResponse.data.filter(
     opacity: 0.7;
   }
 
+  @media (max-width: 1100px) {
+    .galleryPage {
+      padding: 60px 32px;
+    }
+
+    .galleryHeader h1 {
+      font-size: clamp(72px, 14vw, 140px);
+    }
+
+    .galleryGrid {
+      column-count: 2;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .galleryPage {
+      padding: 40px 20px;
+    }
+
+    .galleryHeader h1 {
+      font-size: clamp(48px, 16vw, 72px);
+    }
+
+    .galleryHeader p {
+      padding: 0 20px;
+    }
+
+    .galleryFilter {
+      align-items: flex-start;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .galleryGrid {
+      column-count: 1;
+    }
+
+    .galleryLoadMoreButton {
+      width: 100%;
+      padding-inline: 20px;
+    }
+
+    .galleryDialog {
+      width: calc(100% - 16px);
+    }
+  }
+
   .galleryDialog {
     width: min(96%, 1152px);
     max-height: 94vh;

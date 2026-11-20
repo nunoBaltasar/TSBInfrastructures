@@ -161,6 +161,26 @@ const contributorsByRole = roleOrder.map((role) => ({
     font-weight: 500;
   }
 
+  @media (max-width: 760px) {
+    .contributorsHeader h1 {
+      font-size: clamp(48px, 16vw, 72px);
+      padding: 0 16px;
+    }
+
+    .contributorsPage {
+      padding: 4rem 20px;
+    }
+
+    .contributorsGrid {
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 2rem 16px;
+    }
+
+    .contributor img {
+      width: 140px;
+      height: 150px;
+    }
+  }
 
   
 

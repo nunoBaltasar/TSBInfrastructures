@@ -10,6 +10,7 @@ import type {
 } from '../interfaces/strapi';
 import { getLocale } from '../lib/i18n';
 import { localizedPath, translations } from '../lib/i18n';
+import { getMediaUrl } from '../lib/media';
 
 const locale = getLocale(Astro.url.pathname);
 const t = translations[locale];
@@ -48,9 +49,6 @@ const totalAuthors = authorsResponse.meta.pagination.total;
 const totalArticles = articlesResponse.meta.pagination.total;
 
 const galleryImages = galleryImagesResponse.data;
-const strapiUrl = import.meta.env.STRAPI_URL;
-const getMediaUrl = (url: string) =>
-  url.startsWith('http') ? url : `${strapiUrl}${url}`;
 ---
 
 <BaseLayout title="Travel Blog">

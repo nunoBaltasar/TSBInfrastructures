@@ -4,6 +4,7 @@ import StrapiBlocks from '../../components/common/StrapiBlocks.astro';
 import fetchApi from '../../lib/strapi';
 import type { Article, StrapiCollectionResponse } from '../../interfaces/strapi';
 import { getLocale, translations } from '../../lib/i18n';
+import { getMediaUrl } from '../../lib/media';
 
 export async function getStaticPaths() {
   const response = await fetchApi<StrapiCollectionResponse<Article>>({
@@ -34,10 +35,6 @@ const { article } = Astro.props;
 const locale = getLocale(Astro.url.pathname);
 const t = translations[locale];
 const tags = Array.isArray(article.tags) ? article.tags : [];
-
-const strapiUrl = import.meta.env.STRAPI_URL;
-const getMediaUrl = (url: string) =>
-  url.startsWith('http') ? url : `${strapiUrl}${url}`;
 
 const coverUrl = article.coverImage
   ? getMediaUrl(article.coverImage.formats?.large?.url ?? article.coverImage.url)
@@ -103,7 +100,7 @@ const publicationDate = new Intl.DateTimeFormat(
     </div>
 
     <div class="articleBlocks">
-      <StrapiBlocks content={article.content ?? []} mediaBaseUrl={strapiUrl} />
+      <StrapiBlocks content={article.content ?? []} />
     </div>
   </article>
 </BaseLayout>

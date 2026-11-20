@@ -5,6 +5,7 @@ import headerImage from '../../assets/friskymountains.png';
 import GalleryCard from '../../components/common/GalleryCard.astro';
 import type { GalleryImage, StrapiCollectionResponse } from '../../interfaces/strapi';
 import { getLocale, translations } from '../../lib/i18n';
+import { getMediaUrl } from '../../lib/media';
 
 const locale = getLocale(Astro.url.pathname);
 const t = translations[locale];
@@ -25,8 +26,6 @@ const galleryImagesResponse = await fetchApi<
 });
 
 const strapiUrl = import.meta.env.STRAPI_URL;
-const getMediaUrl = (url: string) =>
-  url.startsWith('http') ? url : `${strapiUrl}${url}`;
 ---
 
 <BaseLayout title={`${t.galleryPage.title} | TravelBlog`}>
@@ -135,6 +134,8 @@ const getMediaUrl = (url: string) =>
 </BaseLayout>
 
 <script>
+  import { getMediaUrl } from '../../lib/media';
+
   interface GalleryMediaFormat {
     url: string;
   }
@@ -215,9 +216,7 @@ const getMediaUrl = (url: string) =>
     card.className = 'galleryCard';
     card.type = 'button';
     card.setAttribute('aria-label', `${enlargeText}: ${galleryImage.title}`);
-    card.dataset.galleryImage = imageUrl.startsWith('http')
-      ? imageUrl
-      : `${strapiUrl}${imageUrl}`;
+    card.dataset.galleryImage = getMediaUrl(imageUrl);
     card.dataset.galleryTitle = galleryImage.title;
     card.dataset.galleryDescription = galleryImage.description ?? '';
     card.dataset.galleryLocation = galleryImage.location ?? '';
@@ -230,11 +229,9 @@ const getMediaUrl = (url: string) =>
       ? galleryImage.author.profileImage.formats?.thumbnail?.url ??
         galleryImage.author.profileImage.url
       : '';
-    card.dataset.galleryAuthorImage = authorImageUrl.startsWith('http')
-      ? authorImageUrl
-      : authorImageUrl
-        ? `${strapiUrl}${authorImageUrl}`
-        : '';
+    card.dataset.galleryAuthorImage = authorImageUrl
+      ? getMediaUrl(authorImageUrl)
+      : '';
 
     const image = document.createElement('img');
     image.src = card.dataset.galleryImage;

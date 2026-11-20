@@ -4,6 +4,7 @@ import fetchApi from '../../lib/strapi';
 import headerImage from '../../assets/waterfall.png';
 import type { Author, StrapiCollectionResponse } from '../../interfaces/strapi';
 import { getLocale, translations } from '../../lib/i18n';
+import { getMediaUrl } from '../../lib/media';
 
 const locale = getLocale(Astro.url.pathname);
 const t = translations[locale];
@@ -15,10 +16,6 @@ const response = await fetchApi<StrapiCollectionResponse<Author>>({
     'pagination[pageSize]': '100',
   },
 });
-
-const strapiUrl = import.meta.env.STRAPI_URL;
-const getMediaUrl = (url: string) =>
-  url.startsWith('http') ? url : `${strapiUrl}${url}`;
 
 const roleOrder = ['Administrator', 'Moderator', 'Writer', 'Traveller'];
 const getRole = (author: Author) => {

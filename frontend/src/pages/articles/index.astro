@@ -8,6 +8,7 @@ import type {
   StrapiCollectionResponse,
 } from '../../interfaces/strapi';
 import { getLocale, translations } from '../../lib/i18n';
+import { getMediaUrl } from '../../lib/media';
 
 const locale = getLocale(Astro.url.pathname);
 const t = translations[locale];
@@ -24,10 +25,6 @@ const articlesResponse = await fetchApi<StrapiCollectionResponse<Article>>(
 );
 
 const latestArticle = articlesResponse.data[0];
-const strapiUrl = import.meta.env.STRAPI_URL;
-const getMediaUrl = (url: string) =>
-  url.startsWith('http') ? url : `${strapiUrl}${url}`;
-
 ---
 
 <BaseLayout title={`${t.navigation.articles} | TravelBlog`}>

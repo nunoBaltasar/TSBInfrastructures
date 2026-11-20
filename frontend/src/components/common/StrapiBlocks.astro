@@ -4,13 +4,13 @@ import type {
   StrapiBlockChild,
   StrapiMedia,
 } from '../../interfaces/strapi';
+import { getMediaUrl as resolveMediaUrl } from '../../lib/media';
 
 interface Props {
   content: StrapiBlock[];
-  mediaBaseUrl: string;
 }
 
-const { content, mediaBaseUrl } = Astro.props;
+const { content } = Astro.props;
 
 const escapeHtml = (value: string) =>
   value
@@ -37,19 +37,7 @@ const getSafeUrl = (value: string) => {
 };
 
 const getMediaUrl = (media: StrapiMedia) => {
-  if (!media.url.startsWith('http')) {
-    return `${mediaBaseUrl}${media.url}`;
-  }
-
-  const mediaUrl = new URL(media.url);
-  const configuredBaseUrl = new URL(mediaBaseUrl);
-  const isLocalMediaHost =
-    mediaUrl.hostname === 'localhost' ||
-    mediaUrl.hostname === '127.0.0.1';
-
-  return isLocalMediaHost
-    ? `${configuredBaseUrl.origin}${mediaUrl.pathname}${mediaUrl.search}`
-    : media.url;
+  return resolveMediaUrl(media.url);
 };
 
 const renderInlineChildren = (children: StrapiBlockChild[] = []): string =>

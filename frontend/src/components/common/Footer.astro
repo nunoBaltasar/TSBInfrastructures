@@ -10,12 +10,6 @@ const t = translations[getLocale(Astro.url.pathname)].footer;
 <footer class = "footer">    
     <h3>{t.tagline}</h3>
     <div class = "rights">
-        <div class = "links">
-            <a href= "#"> {t.privacy} </a>
-            <a href= "#"> {t.cooperation}</a>
-            <a href= "#"> {t.sponsorship}</a>
-            <a href= "#"> {t.contact}</a>
-        </div>
         <div class = "socials">
             <a href = "#"><i class = 'bx bxl-facebook'></i></a>
             <a href = "#"><i class = 'bx bxl-twitter'></i></a>
@@ -27,3 +21,68 @@ const t = translations[getLocale(Astro.url.pathname)].footer;
     </div>
     
 </footer>
+
+<style>
+  footer {
+    background-color: #000;
+    color: #fff;
+    padding: 50px 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 100px;
+  }
+
+  footer h3 {
+    font-size: 48px;
+  }
+
+  footer .rights {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 26px;
+  }
+
+  footer .links {
+    display: flex;
+    gap: 30px;
+  }
+
+  footer .links a {
+    color: #989898;
+    transition: color 0.3s ease;
+  }
+
+  footer .links a:hover {
+    color: #ffffff;
+  }
+
+  footer .socials {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  footer .socials a {
+    color: #989898;
+  }
+
+  footer .socials i {
+    color: inherit;
+    font-size: 20px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+
+  footer .socials a:hover i,
+  footer .socials a:focus-visible i {
+    color: #4b8d4b;
+  }
+
+  footer .rights p {
+    font-size: 13px;
+    color: #777;
+  }
+</style>

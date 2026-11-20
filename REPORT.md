@@ -29,7 +29,6 @@ SQLite provides the following advantages in this context:
 - sufficient performance for the expected workload;
 - straightforward integration with Strapi and Docker volumes.
 
-The main limitation is that SQLite is not appropriate for horizontal scaling or several Strapi containers writing concurrently. The deployed architecture must therefore use a single backend instance.
 
 ### 2.2 TypeScript
 
@@ -57,7 +56,7 @@ This choice keeps the source repository, GitHub Actions workflows and container 
 
 ### 3.1 Internationalisation
 
-English was configured as the default Strapi locale, with Portuguese as an additional locale.
+English was configured as the default frontend locale, with Portuguese as an additional locale. The Strapi content types are localized and support both languages.
 
 Internationalisation was enabled at the beginning because enabling it later would require revisiting existing content types, entries, slugs and frontend routes. The Astro frontend provides Portuguese and English routes and requests the corresponding Strapi locale.
 
@@ -65,12 +64,14 @@ The current frontend is designed to display available content even when a transl
 
 ### 3.2 Content types
 
-The principal Strapi content types are:
+The Strapi content types are:
 
 - **Tag**;
 - **Author**;
 - **Article**;
 - **Gallery Image**.
+
+I decided to use collection types because the application needs to store multiple entries for articles, authors, tags, and gallery images. Single types are intended for content that only has one entry, while components are used as reusable field structures inside content types.
 
 The content types contain a mixture of common fields, media fields and relations. For example, a tag contains a name and slug and has many-to-many relations with articles and gallery images.
 
@@ -115,21 +116,16 @@ The project defines specific administration-panel roles rather than relying only
 - **Administrator/Super Admin**, responsible for the complete CMS configuration.
 
 
-### dizer que tiveram de ser criados em conjunto com autores, se nao nao era possivel mostrar no painel colaboradeores
-
 The permissions follow the principle of least privilege. Contributors only receive the permissions required for their responsibilities, while moderation and system configuration remain restricted.
 
 The roles were tested by inviting separate administrative users and verifying which content types and actions were available to each account.
 
 ### 3.5 Rich-text blocks
 
-## dizer que tive problemas 
+Since Astro does not provide a native renderer for Strapi’s JSON-based Rich Text Blocks format, I implemented a custom renderer that converts each block into the corresponding semantic HTML element.
 
-Article content uses Strapi's rich-text blocks. Rather than adding React only for rendering the block structure, I implemented a dedicated Astro-compatible renderer.
+This approach keeps the frontend centred on Astro and provides full control over the generated markup. The renderer supports all block types required by the current content and can be extended to support additional types in the future.
 
-This keeps the frontend centred on Astro and provides control over the generated HTML. The renderer handles the block types required by the current content. Unsupported or future block types can be added when needed.
-
-## Blocks é uma cena nova, ao contrario do markdown, dai ter de fazer isto
 
 ### 3.6 Known editorial limitation
 
@@ -159,19 +155,20 @@ The public website contains:
 
 ### 4.2 Article and gallery pages
 
-Article cards provide a summary view that links to the complete article page. Individual article routes use the article slug and present the title, summary, author, date, tags, rich-text content and media.
+Article cards provide a summary of each article and link to its complete detail page. Individual article routes use the article slug and display the title, summary, author, publication date, tags, rich-text content, and associated media.
 
-The gallery uses cards and a responsive layout. Images use browser lazy loading where appropriate so that content outside the initial viewport is not downloaded immediately. This improves initial page loading, particularly on pages containing many photographs.
+The gallery initially displays a limited set of gallery images published through Strapi. A "Filter by" control exposes the available tags and allows exactly one tag to be selected; selecting a tag reloads the grid with only matching images. Additional images are requested by selecting the "Load more" button. When an image is selected, a modal opens with an enlarged view and its associated metadata, including the title, description, location, author, and tags.
 
-The gallery also includes an enlarged image view with associated metadata.
+The header underlines the navigation item corresponding to the current page. Portuguese and English routes retain the active underline in the matching page menu.
+
+The footer is implemented as a separate Astro component and contains component-scoped styles. Its social links provide a visible hover and keyboard-focus state.
 
 ### 4.3 Internationalised frontend routes
 
-The frontend supports Portuguese and English interface text and requests the corresponding Strapi locale.
+The frontend supports both Portuguese and English. Interface elements are translated locally, while content retrieved from Strapi is requested using the locale selected by the user.
 
-A known navigation consideration is that translated articles may use different slugs. Switching language from an individual article cannot safely assume that the same slug exists in the other locale. The current implementation therefore needs to use an available translated route or return to the corresponding listing when no translated document exists.
+Since translations are not generated automatically, each Strapi entry must be created separately in Portuguese and English. When a translation is unavailable, the frontend uses the content available in the other locale as a fallback. This required implementing logic that first requests content in the selected language and then retrieves the alternative locale when no corresponding translation exists.
 
-## curretn problem: se tiver pagina aberta num ficheior em ingles e rtocar para portugues, havendo uma versao em pt, a pagina crasha
 
 ### 4.4 Static media
 
@@ -215,7 +212,7 @@ Media URL handling converts Strapi URLs into local static paths such as:
 /uploads/example-image.avif
 ```
 
-As a result, Cloudflare serves the generated pages and media directly. After a successful build, the public website no longer needs Strapi to remain online for existing text or images.
+As a result, Cloudflare serves the generated pages and media directly. After a successful build, the existing static pages and local images remain available when Strapi is offline. Loading additional gallery pages requires the public `STRAPI_URL` used by the deployed frontend to remain reachable.
 
 ---
 
@@ -225,7 +222,7 @@ As a result, Cloudflare serves the generated pages and media directly. After a s
 
 The backend uses a multi-stage Dockerfile.
 
-The build stage installs dependencies and builds the Strapi administration panel. The production stage contains the required runtime files and launches Strapi with `npm run start`.
+Both Docker stages use Node.js 24. The build stage installs dependencies and builds the Strapi administration panel. The production stage contains the required runtime files and launches Strapi with `npm run start`. The GitHub Actions workflows also use Node.js 24.
 
 The final container runs as the `node` user rather than as root. Files such as local environment files, local dependencies, temporary database files and uploads are excluded from the Docker build context where appropriate.
 
@@ -305,10 +302,9 @@ The Frontend CI workflow was therefore made self-contained. It:
 
 1. installs backend dependencies;
 2. starts a temporary Strapi instance inside the GitHub runner;
-3. waits for the health endpoint;
-4. installs frontend dependencies;
-5. builds Astro using the runner's local Strapi address;
-6. uploads `frontend/dist` as a workflow artifact.
+3. installs frontend dependencies;
+4. builds Astro using the runner's local Strapi address;
+5. uploads `frontend/dist` as a workflow artifact.
 
 This validates the real Strapi-to-Astro integration without depending on my computer or a Tunnel.
 
@@ -330,14 +326,7 @@ Content updates in Strapi are database changes, not source-code changes. They do
 
 ## 7. Cloudflare deployment
 
-The Astro frontend is connected to Cloudflare through Git integration with:
-
-```text
-Production branch: main
-Root directory: frontend
-Build command: npm run build
-Build output: dist
-```
+The Astro frontend is connected to Cloudflare through Git integration.
 
 Cloudflare requires a public `STRAPI_URL` during build time because its build runner cannot reach `localhost:1337` on my computer.
 
@@ -355,7 +344,7 @@ After a successful build, Cloudflare hosts:
 - CSS and frontend JavaScript;
 - the copied Strapi media under `/uploads/`.
 
-The resulting website remains fully available when the local backend and Tunnel are stopped.
+The existing generated pages and static media remain available when the local backend and Tunnel are stopped. Loading additional gallery pages, however, is a runtime operation that requires Strapi to remain reachable while the user requests them.
 
 A Quick Tunnel URL changes when recreated. Before a later Cloudflare build, the variable must therefore be updated to the current URL. A permanent hosted backend or Named Tunnel would remove this manual step, but permanent backend hosting was treated as an optional extension rather than the primary evaluation requirement.
 
@@ -422,13 +411,16 @@ The Cloudflare deployment demonstrates the additional ability to host the static
 
 The current project has the following known limitations:
 
-- SQLite limits the backend to a single writing instance and is not suitable for horizontal scaling;
+
+- Minor visual inconsistencies that should be fixed;
+- Articles pages do not yet include a "Load more" button, as implemented on the gallery page;
 - the public hosted frontend requires a temporarily reachable Strapi API whenever a new remote build is needed;
+- gallery pagination requests the public Strapi API when a user loads additional images;
 - automatic Strapi-to-Cloudflare rebuild through a webhook has not yet been configured;
 - translated detail pages require safer fallback handling when a corresponding translated slug does not exist;
 - administration users are not automatically mapped to public Author profiles;
 - additional rich-text block types may require future renderer updates;
-- a permanent deployment should use a stable backend hostname, HTTPS, persistent backups and object storage or a continuously running media service.
+
 
 Potential future work includes:
 
@@ -438,7 +430,10 @@ Potential future work includes:
 - moving media to Cloudflare R2, Amazon S3 or Cloudinary;
 - migrating SQLite to PostgreSQL if the workload or concurrency requirements increase;
 - improving translated content fallbacks and language-switching behaviour;
-- creating an explicit mapping between administrative users and Author profiles.
+- creating an explicit mapping between administrative users and Author profiles;
+- implementing a search bar on articles and gallery pages;
+- allowing the user to check the details on each contributor (similar to gallery images).
+
 
 ---
 

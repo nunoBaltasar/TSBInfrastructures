@@ -13,7 +13,7 @@ This README explains how to run the project in development, how to test it local
 
 To run the applications directly, install:
 
-- Node.js 22 LTS;
+- Node.js 24 LTS;
 - npm;
 - Git.
 
@@ -104,7 +104,6 @@ TRANSFER_TOKEN_SALT=<secret>
 JWT_SECRET=<secret>
 ENCRYPTION_KEY=<secret>
 
-BACKEND_VERSION=latest
 ```
 Use the same secrets from `backend/.env`.
 
@@ -308,103 +307,50 @@ Articles, gallery entries, authors, tags, administrative users, roles and permis
 
 At the current stage of the project, a content change only appears on the deployed static frontend after a new Cloudflare build is started. Automatic Strapi-to-Cloudflare rebuilds are not yet configured.
 
-## 5. Cloudflare Page
-The current website was deployed through Cloudflare Pages & Workes and can be accessed by using the domain
-`tsbinfrastructures.baltasarcnpt.workers.dev`.
-Unfortunately, the next step can only be done by the owner of of the project, since it relies on his Cloudflare Dashboard account.
-However, it will also be included an explanation on how to update the cloudflare deployed page
+## 5. Cloudflare Deployment
+The frontend is currently deployed through Cloudflare Workers and Pages and is available at:
 
-## 5. Temporary public backend for Cloudflare builds
-AS mentioned before, the website is currently published. To make some changes, you need to use a cloudflare tunnel to extablish communication with the localhosted backend and cloudflare.
+https://tsbinfrastructures.baltasarcnpt.workers.dev
+
+The Cloudflare project is managed through the project owner's Cloudflare account. Therefore, only the project owner can update its environment variables or manually manage its deployments.
+
+The following section explains how the deployed frontend can currently be updated using the locally running Strapi backend.
+
+To include updated Strapi content in a new Cloudflare build, the local backend must temporarily be made publicly accessible.
 start with:
 
+First, start the backend from the repository root:
 ```bash
 docker compose -f docker-compose.production.yml up -d
 ```
 
-In another terminal, start the Tunnel:
+In another terminal, start a Cloudflare Quick Tunnel:
 
 ```bash
 cloudflared tunnel --url http://localhost:1337
 ```
 
-Cloudflare returns an address similar to:
+Cloudflare returns a temporary public address similar to:
 
 ```text
 https://example-name.trycloudflare.com
 ```
 
 
-The `cloudflared` terminal and the Docker backend must remain running while GitHub or Cloudflare builds the frontend.
+The Docker backend and the terminal running cloudflared must remain active while GitHub Actions or Cloudflare builds the frontend.
 
-A Quick Tunnel normally receives a different URL after it is restarted. When this happens, update `STRAPI_URL` in:
+A Quick Tunnel normally receives a different URL whenever it is restarted. When this happens, update STRAPI_URL in
+the Cloudflare project settings, under Variables and Secrets.
 
-1. Cloudflare project settings, under Variables and Secrets.
+After changing STRAPI_URL, a new Cloudflare build is required because the previously generated static pages retain the old backend and media URLs.
 
-A new Cloudflare deployment is then required because the previously generated pages retain the old backend and media URLs.
+If frontend code has changed, commit and push the changes to main. Cloudflare will automatically detect the push and start a new build.
 
-To actually see the changes, you can just commit and push the changes, and they will automatically be triggered.
+If only Strapi content has changed, such as an article, gallery image, author or tag, no Git commit is required. Until an automatic webhook is configured, a new Cloudflare build must be started manually.
 
+Keep the backend and Tunnel running until the Cloudflare deployment finishes. After the build is complete, the static pages remain available. 
 
-
-
-The GitHub runner and Cloudflare build servers cannot access `http://localhost:1337` on the developer's computer. A Cloudflare Quick Tunnel temporarily exposes the local Strapi backend.
-
-Start the production-like backend:
-
-```bash
-docker compose -f docker-compose.production.yml up -d
-```
-
-In another terminal, start the Tunnel:
-
-```bash
-cloudflared tunnel --url http://localhost:1337
-```
-
-Cloudflare returns an address similar to:
-
-```text
-https://example-name.trycloudflare.com
-```
-
-
-The `cloudflared` terminal and the Docker backend must remain running while GitHub or Cloudflare builds the frontend.
-
-A Quick Tunnel normally receives a different URL after it is restarted. When this happens, update `STRAPI_URL` in:
-
-1. Cloudflare project settings, under Variables and Secrets.
-
-A new Cloudflare deployment is then required because the previously generated pages retain the old backend and media URLs.
-
-## 6. Deploy the frontend to Cloudflare
-
-The repository is connected to Cloudflare through its Git integration.
-
-Use the following build configuration:
-
-```text
-Production branch: main
-Root directory: frontend
-Build command: npm run build
-Build output: dist
-```
-
-Set this Cloudflare build variable:
-
-```text
-STRAPI_URL=https://<current-public-backend-address>
-```
-
-For the current academic setup, the value is the active Quick Tunnel URL. Do not include `/api` at the end.
-
-The Strapi backend and Tunnel must remain online until the Cloudflare build finishes. Once the deployment is complete, the generated static pages remain online even if Strapi is stopped.
-
-Uploaded media currently remains hosted by Strapi. Consequently, article text and static pages remain available when Strapi is offline, but images under `/uploads/` do not load until the backend becomes available again.
-
-A push to `main` automatically starts a new Cloudflare build when the repository integration is active. Changing only a Cloudflare environment variable does not alter an existing deployment, so another build must be started afterwards.
-
-## 7. Deploy the backend to a Linux server
+## 6. Deploy the backend to a Linux server
 
 A permanent Linux-server deployment was not performed as part of the current project demonstration. The backend was validated locally through its Linux-based Docker image and exposed temporarily through Cloudflare Tunnel.
 

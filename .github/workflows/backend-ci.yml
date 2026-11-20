@@ -46,7 +46,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          APP_KEYS: ci-key-1,ci-key-2
+          APP_KEYS: ci-key-1,ci-key-2, ci-key-3,ci-key-4
           API_TOKEN_SALT: ci-api-token-salt
           ADMIN_JWT_SECRET: ci-admin-jwt-secret
           TRANSFER_TOKEN_SALT: ci-transfer-token-salt

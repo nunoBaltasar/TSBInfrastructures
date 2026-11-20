@@ -10,6 +10,13 @@ const locale = getLocale(Astro.url.pathname);
 const t = translations[locale];
 const languagePath = (language: Locale) =>
   localizedPath(language, Astro.url.pathname);
+const route = Astro.url.pathname
+  .replace(/^\/(pt|en)(?=\/|$)/, '')
+  .replace(/\/+$/, '') || '/';
+const isHome = route === '/';
+const isArticles = route === '/articles' || route.startsWith('/articles/');
+const isGallery = route === '/gallery';
+const isContributors = route === '/contributors';
 ---
 
 <header>
@@ -17,10 +24,34 @@ const languagePath = (language: Locale) =>
     <a href={localizedPath(locale, '/')} class = "logo">TravelBlog</a>
     <div class="links">
       <div class = "pages">
-        <a href={localizedPath(locale, '/')} > {t.navigation.home} </a>
-        <a href={localizedPath(locale, '/articles')}> {t.navigation.articles} </a>
-        <a href={localizedPath(locale, '/gallery')}> {t.navigation.gallery} </a>
-        <a href={localizedPath(locale, '/contributors')}> {t.navigation.contributors} </a>
+        <a
+          class:list={{ active: isHome }}
+          href={localizedPath(locale, '/')}
+          aria-current={isHome ? 'page' : undefined}
+        >
+          {t.navigation.home}
+        </a>
+        <a
+          class:list={{ active: isArticles }}
+          href={localizedPath(locale, '/articles')}
+          aria-current={isArticles ? 'page' : undefined}
+        >
+          {t.navigation.articles}
+        </a>
+        <a
+          class:list={{ active: isGallery }}
+          href={localizedPath(locale, '/gallery')}
+          aria-current={isGallery ? 'page' : undefined}
+        >
+          {t.navigation.gallery}
+        </a>
+        <a
+          class:list={{ active: isContributors }}
+          href={localizedPath(locale, '/contributors')}
+          aria-current={isContributors ? 'page' : undefined}
+        >
+          {t.navigation.contributors}
+        </a>
 
       </div>
       <div class="languageSelector" aria-label={t.language}>
@@ -91,6 +122,13 @@ header .header  .logo{
     margin-right: 30px;
 }
 
+.pages a.active {
+  text-decoration: underline;
+  text-decoration-color: #ffffff;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
+}
+
 header .header .languageSelector {
   display: flex;
   margin-right: 40px;
@@ -121,6 +159,10 @@ header .header .languageSelector a:not(.active) {
   color: #000;
 }
 
-
+header .header .languageSelector a:not(.active):hover {
+  transition: background-color 0.3s ease;
+  background-color: var(--color-primary-dark);
+  color: #ffffff;
+}
 </style>
 

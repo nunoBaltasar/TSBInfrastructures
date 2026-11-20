@@ -174,6 +174,8 @@ npm run build
 npm run start
 ```
 
+npm ci may display deprecation and security audit warnings from transitive dependencies. These warnings do not prevent the project from running with the tested dependency versions.
+
 The Strapi backend runs at `http://localhost:1337`.
 
 ### Frontend

@@ -46,13 +46,13 @@ Windows PowerShell:
 Copy-Item backend\.env.example backend\.env
 ```
 
-Replace every placeholder secret in `backend/.env` with a real value. A random Base64 value can be generated with:
+Replace every placeholder secret in `backend/.env` with a real value. A random Base64 value can be generated in, for example, powershell with:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-Generate four different values for `APP_KEYS` and one value for each remaining Strapi secret.
+Generate four different values for `APP_KEYS`, separated by a comma, and one value for each remaining Strapi secret.
 
 For local development, the relevant database configuration is:
 
@@ -106,7 +106,7 @@ ENCRYPTION_KEY=<secret>
 
 BACKEND_VERSION=latest
 ```
-
+Use the same secrets from `backend/.env`.
 
 
 ## 1. Run in development mode
@@ -271,13 +271,11 @@ The workflow is defined in `.github/workflows/frontend-ci.yml`.
 A push to `main` that matches the workflow triggers automatically. It:
 
 1. installs frontend dependencies;
-2. reads `STRAPI_URL` from GitHub Actions secrets;
-3. runs `npm run build`;
-4. stores `frontend/dist` as a workflow artifact.
+2. runs `npm run build`;
+3. stores `frontend/dist` as a workflow artifact.
 
 This workflow validates the frontend but does not publish the public website. The connected Cloudflare project performs the actual frontend build and deployment.
 
-Use **Run workflow** manually only when the frontend build needs to be tested again without creating another commit, for example after changing the GitHub `STRAPI_URL` secret.
 
 ### Types of changes
 
@@ -339,10 +337,9 @@ https://example-name.trycloudflare.com/api/articles?populate=*
 
 The `cloudflared` terminal and the Docker backend must remain running while GitHub or Cloudflare builds the frontend.
 
-A Quick Tunnel normally receives a different URL after it is restarted. When this happens, update `STRAPI_URL` in both places:
+A Quick Tunnel normally receives a different URL after it is restarted. When this happens, update `STRAPI_URL` in:
 
-1. GitHub repository settings, under Actions secrets;
-2. Cloudflare project settings, under Variables and Secrets.
+1. Cloudflare project settings, under Variables and Secrets.
 
 A new Cloudflare deployment is then required because the previously generated pages retain the old backend and media URLs.
 
@@ -394,82 +391,3 @@ The server would also require:
 
 This procedure is documented as the intended production deployment, but it has not been validated on a permanent public Linux server.
 
-## 8. Data persistence and new clones
-
-The following paths are excluded from Git:
-
-```text
-backend/.tmp/
-backend/public/uploads/
-```
-
-They contain the SQLite database and locally uploaded media.
-
-A developer cloning the repository receives the application code but not the existing CMS data, administrative accounts or uploads. After starting Strapi, the developer must create the first administrator and add content, or import a separate Strapi data export if one is supplied.
-
-Do not commit `data.db`. SQLite is a binary, environment-specific file that can contain administrative data and cannot be safely merged between contributors.
-
-## 9. Common commands
-
-| Purpose | Command |
-| --- | --- |
-| Develop backend | `cd backend && npm run develop` |
-| Build backend | `cd backend && npm run build` |
-| Start backend natively | `cd backend && npm run start` |
-| Develop frontend | `cd frontend && npm run dev` |
-| Build frontend | `cd frontend && npm run build` |
-| Preview frontend build | `cd frontend && npm run preview` |
-| Build and start local Docker backend | `docker compose up -d --build` |
-| Pull backend from GHCR | `docker compose -f docker-compose.production.yml pull` |
-| Start GHCR backend image | `docker compose -f docker-compose.production.yml up -d` |
-| View production-like logs | `docker compose -f docker-compose.production.yml logs -f backend` |
-| Start temporary public Tunnel | `cloudflared tunnel --url http://localhost:1337` |
-
-## 10. Troubleshooting
-
-### Strapi asks for administrator registration again
-
-Strapi is using a new or empty SQLite database. Confirm that the configured path and bind mount agree:
-
-```dotenv
-DATABASE_FILENAME=/opt/app/data/data.db
-```
-
-```yaml
-- ./backend/.tmp:/opt/app/data
-```
-
-### SQLite cannot open the database
-
-Confirm that:
-
-- `backend/.tmp/` exists;
-- Docker Desktop can access the project directory;
-- the container can write to `/opt/app/data`;
-- no native Strapi process is using the same SQLite database.
-
-### Remote frontend build cannot reach Strapi
-
-Confirm that:
-
-- the backend container is running;
-- the Quick Tunnel is running;
-- the public `/api/articles` address works in a browser;
-- `STRAPI_URL` contains the current Tunnel address;
-- `STRAPI_URL` does not end with `/api`.
-
-### Images point to an old Tunnel
-
-Update `STRAPI_URL` in Cloudflare and start a new Cloudflare build. Existing static pages keep the media URLs used during their original build.
-
-### New Strapi content does not appear on the deployed frontend
-
-The Astro frontend is static. Start a new Cloudflare build after publishing the content. Automatic rebuilds from Strapi are not yet configured.
-
-## Security
-
-- Never commit `backend/.env`, `frontend/.env` or `backend.env`.
-- Never commit the SQLite database or real administrative data.
-- Never expose Strapi secrets, API tokens or private deployment URLs.
-- Keep the public Strapi API limited to required read operations.
-- Use HTTPS and persistent backups for a permanent deployment.

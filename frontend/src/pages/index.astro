@@ -106,7 +106,7 @@ const galleryImages = galleryImagesResponse.data;
           <div class="carousel-track">
             {galleryImages.map((galleryImage) =>
               galleryImage.image ? (
-                <a class="carousel-item" href={localizedPath(locale, `/gallery/${galleryImage.slug}`)}>
+                <a class="carousel-item" href={localizedPath(locale, `/gallery`)}>
                   <img
                     src={getMediaUrl(
                       galleryImage.image.formats?.medium?.url ?? galleryImage.image.url

@@ -38,16 +38,15 @@ const latestArticle = articlesResponse.data[0];
       ),
         url('${headerImage.src}'); background-size: 100% 100%; background-position: center; 
         background-repeat: no-repeat; background-attachment: fixed;  height: 100vh; width: 100%;`}>
-        <div class = "left">
-          <h1>{t.articlesPage.title} <span>{t.articlesPage.titleAccent}</span></h1>
-          <div class = "par">
-            <p>{t.articlesPage.description}</p> 
-            <i class="bx bx-right-arrow-circle"></i>
-          </div>
-          
-          
-        </div>
-        {latestArticle?.coverImage && (
+          <div class="articleHeroContent">
+            <div class="left">
+              <h1>{t.articlesPage.title} <span>{t.articlesPage.titleAccent}</span></h1>
+              <div class="par">
+                <p>{t.articlesPage.description}</p>
+                <i class="bx bx-right-arrow-circle"></i>
+              </div>
+            </div>
+            {latestArticle?.coverImage && (
             <section class="latestArticle">
               <div class="latestArticleCard">
                 <ArticleCard
@@ -61,6 +60,7 @@ const latestArticle = articlesResponse.data[0];
               </div>
             </section>
           )}
+        </div>
       </section>
       <div class="articlesList">
         <h2>{t.articlesPage.allTitle} <span>{t.articlesPage.allTitleAccent}</span></h2>
@@ -93,6 +93,16 @@ section{
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.articleHeroContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  gap: clamp(32px, 5vw, 80px);
 }
 
 section .left{
@@ -144,8 +154,9 @@ section .left .par i{
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
-  width: 100%;
-  padding-right: 65px;
+  width: min(520px, 42%);
+  flex: 0 1 520px;
+  padding-right: 0;
   margin-top: 60px;
 }
 
@@ -184,11 +195,15 @@ section .left .par i{
 
 @media (max-width: 1100px) {
   section {
-    padding: 0 32px;
+    padding: 80px 32px 40px;
+  }
+
+  .articleHeroContent {
+    align-items: center;
   }
 
   section .left {
-    width: 55%;
+    width: 50%;
   }
 
   section .left h1 {
@@ -196,7 +211,7 @@ section .left .par i{
   }
 
   .latestArticle {
-    width: 45%;
+    width: 42%;
     padding-right: 0;
   }
 
@@ -210,7 +225,12 @@ section .left .par i{
     min-height: 100vh;
     height: auto;
     padding: 100px 20px 40px;
+  }
+
+  .articleHeroContent {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
   }
 
   section .left {
@@ -232,6 +252,8 @@ section .left .par i{
 
   .latestArticle {
     width: 100%;
+    max-width: 520px;
+    flex-basis: auto;
     margin-top: 16px;
   }
 

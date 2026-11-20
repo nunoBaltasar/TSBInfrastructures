@@ -431,7 +431,8 @@ Potential future work includes:
 - improving translated content fallbacks and language-switching behaviour;
 - creating an explicit mapping between administrative users and Author profiles;
 - implementing a search bar on articles and gallery pages;
-- allowing the user to check the details on each contributor (similar to gallery images).
+- allowing the user to check the details on each contributor (similar to gallery images);
+- implementing resolutions for mobile.
 
 
 ---

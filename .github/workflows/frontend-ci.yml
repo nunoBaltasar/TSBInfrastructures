@@ -8,6 +8,7 @@ on:
       - main
     paths:
       - "frontend/**"
+      - "backend/**"
       - ".github/workflows/frontend-ci.yml"
 
   push:
@@ -15,6 +16,7 @@ on:
       - main
     paths:
       - "frontend/**"
+      - "backend/**"
       - ".github/workflows/frontend-ci.yml"
 
 permissions:
@@ -25,10 +27,6 @@ jobs:
     name: Build Astro frontend
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: frontend
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,15 +36,60 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Start Strapi
+        working-directory: backend
+        run: |
+          npm run develop > /tmp/strapi.log 2>&1 &
+          echo $! > /tmp/strapi.pid
+        env:
+          HOST: 0.0.0.0
+          PORT: 1337
+          NODE_ENV: development
+
+          DATABASE_CLIENT: sqlite
+          DATABASE_FILENAME: .tmp/data.db
+
+          APP_KEYS: ci-app-key-1,ci-app-key-2,ci-app-key-3,ci-app-key-4
+          API_TOKEN_SALT: ci-api-token-salt
+          ADMIN_JWT_SECRET: ci-admin-jwt-secret
+          TRANSFER_TOKEN_SALT: ci-transfer-token-salt
+          JWT_SECRET: ci-jwt-secret
+          ENCRYPTION_KEY: ci-encryption-key
+
+      - name: Wait for Strapi
+        run: |
+          for attempt in {1..60}; do
+            if curl --fail --silent \
+              http://127.0.0.1:1337/_health > /dev/null; then
+              echo "Strapi is ready."
+              exit 0
+            fi
+
+            echo "Waiting for Strapi: attempt ${attempt}/60"
+            sleep 5
+          done
+
+          echo "Strapi did not become ready."
+          cat /tmp/strapi.log
+          exit 1
+
+      - name: Install frontend dependencies
+        working-directory: frontend
         run: npm ci
 
       - name: Build frontend
+        working-directory: frontend
         run: npm run build
         env:
-          STRAPI_URL: ${{ secrets.STRAPI_URL }}
+          STRAPI_URL: http://127.0.0.1:1337
 
       - name: Upload static website
         uses: actions/upload-artifact@v4
@@ -54,3 +97,11 @@ jobs:
           name: frontend-dist
           path: frontend/dist
           if-no-files-found: error
+
+      - name: Show Strapi logs after failure
+        if: failure()
+        run: |
+          if [ -f /tmp/strapi.log ]; then
+            echo "===== Strapi logs ====="
+            cat /tmp/strapi.log
+          fi

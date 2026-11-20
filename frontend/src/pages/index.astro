@@ -20,7 +20,7 @@ const authorsResponse = await fetchApi<StrapiCollectionResponse<Author>>(
     endpoint: 'authors',
     locale,
     query: {
-      'pagination[pageSize]': '1',
+      'pagination[pageSize]': '100',
     },
   },
 );
@@ -29,7 +29,7 @@ const articlesResponse = await fetchApi<StrapiCollectionResponse<Article>>(
     endpoint: 'articles',
     locale,
     query: {
-      'pagination[pageSize]': '1',
+      'pagination[pageSize]': '100',
     },
   },
 );
@@ -81,16 +81,16 @@ const galleryImages = galleryImagesResponse.data;
           </p>
         </div>
         <div class = "about-buttons">
-          <a class = "authors" href={localizedPath(locale, '/contributors')}>
+          <div class = "authors">
             <span>{totalAuthors}</span>
             <span>{t.home.current}</span> 
             <span>{t.home.authors}</span>
-          </a>
-          <a href={localizedPath(locale, '/articles')}>
+          </div>
+          <div class="total-articles">
             <span>{totalArticles}</span>
             <span>{t.home.total}</span> 
             <span>{t.home.articles}</span>
-          </a>
+          </div>
         </div>
       </div>
     </div>
@@ -314,7 +314,7 @@ const galleryImages = galleryImagesResponse.data;
     flex: 0 0 auto;
   }
 
-  .about-buttons a {
+  .about-buttons > div {
     background-color: #2d9b2d;
     color: #ffffff;
     border-radius: 4px;
@@ -485,7 +485,7 @@ const galleryImages = galleryImagesResponse.data;
       width: calc(100% - 40px);
     }
 
-    .about-buttons a {
+    .about-buttons > div {
       font-size: 22px;
     }
 

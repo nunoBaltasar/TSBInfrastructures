@@ -252,7 +252,7 @@ Therefore:
 - `backend/public/uploads/` is seen as `/opt/app/public/uploads/`.
 
 The existing SQLite database and uploaded media are included in the repository. Docker Compose bind-mounts these files into the container, allowing Strapi to use the prepared content, users, roles, permissions and media. Because the data is stored on the host rather than inside the container, it remains available when the container is stopped, removed or recreated.
-After cloning the repository and creating the required environment files, the evaluator can start the backend with the prepared database and content. A new administrator registration is only requested if backend/.tmp/data.db is missing, empty or mounted at an incorrect path.
+After cloning the repository and creating the required environment files, the evaluator can start the backend with the prepared database and content.
 
 ## 4. CI/CD behaviour
 
@@ -332,7 +332,7 @@ The Cloudflare project is managed through the project owner's Cloudflare account
 The following section explains how the deployed frontend can currently be updated using the locally running Strapi backend.
 
 To include updated Strapi content in a new Cloudflare build, the local backend must temporarily be made publicly accessible.
-start with:
+Start with:
 
 First, start the backend from the repository root:
 ```bash

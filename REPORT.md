@@ -157,7 +157,7 @@ The public website contains:
 
 Article cards provide a summary of each article and link to its complete detail page. Individual article routes use the article slug and display the title, summary, author, publication date, tags, rich-text content, and associated media.
 
-The gallery initially displays a limited set of gallery images published through Strapi. A "Filter by" control exposes the available tags and allows exactly one tag to be selected; selecting a tag reloads the grid with only matching images. Additional images are requested by selecting the "Load more" button. When an image is selected, a modal opens with an enlarged view and its associated metadata, including the title, description, location, author, and tags.
+The gallery initially displays a limited set of gallery images published through Strapi. A "Filter by" control exposes the available tags and allows exactly one tag to be selected; selecting a tag filters the already generated grid locally. Selecting "Load more" reveals additional generated cards without a new API request. When an image is selected, a modal opens with an enlarged view and its associated metadata, including the title, description, location, author, and tags.
 
 The header underlines the navigation item corresponding to the current page. Portuguese and English routes retain the active underline in the matching page menu.
 
@@ -285,7 +285,7 @@ For relevant pushes to `main`, the workflow:
 4. builds the Docker image from `backend/Dockerfile`;
 5. publishes the image to GHCR.
 
-Pull requests validate the backend and Docker build without publishing a production image.
+Pull requests validate the backend and Docker build without publishing an image to GHCR.
 
 The resulting image can be tested locally with:
 
@@ -412,9 +412,10 @@ The Cloudflare deployment demonstrates the additional ability to host the static
 The current project has the following known limitations:
 
 
-- Minor visual inconsistencies that should be fixed;
+- Responsive spacing, typography and component alignment still require additional testing and refinement across mobile, tablet and large desktop viewport sizes.
 - Articles pages do not yet include a "Load more" button, as implemented on the gallery page;
 - the public hosted frontend requires a temporarily reachable Strapi API whenever a new remote build is needed;
+- the gallery build currently retrieves up to 100 gallery images, so more than 100 entries will require a paginated build-time import;
 - automatic Strapi-to-Cloudflare rebuild through a webhook has not yet been configured;
 - translated detail pages require safer fallback handling when a corresponding translated slug does not exist;
 - administration users are not automatically mapped to public Author profiles;
@@ -432,7 +433,6 @@ Potential future work includes:
 - creating an explicit mapping between administrative users and Author profiles;
 - implementing a search bar on articles and gallery pages;
 - allowing the user to check the details on each contributor (similar to gallery images);
-- implementing resolutions for mobile.
 
 
 ---

@@ -212,7 +212,7 @@ Media URL handling converts Strapi URLs into local static paths such as:
 /uploads/example-image.avif
 ```
 
-As a result, Cloudflare serves the generated pages and media directly. After a successful build, the existing static pages and local images remain available when Strapi is offline. Loading additional gallery pages requires the public `STRAPI_URL` used by the deployed frontend to remain reachable.
+As a result, Cloudflare serves the generated pages and media directly. After a successful build, the existing static pages, local images and gallery pagination/filter data remain available when Strapi is offline. Loading more images and applying tag filters are handled locally in the browser.
 
 ---
 
@@ -344,7 +344,7 @@ After a successful build, Cloudflare hosts:
 - CSS and frontend JavaScript;
 - the copied Strapi media under `/uploads/`.
 
-The existing generated pages and static media remain available when the local backend and Tunnel are stopped. Loading additional gallery pages, however, is a runtime operation that requires Strapi to remain reachable while the user requests them.
+The existing generated pages, static media and gallery data remain available when the local backend and Tunnel are stopped. Loading additional gallery pages and applying tag filters are static browser operations.
 
 A Quick Tunnel URL changes when recreated. Before a later Cloudflare build, the variable must therefore be updated to the current URL. A permanent hosted backend or Named Tunnel would remove this manual step, but permanent backend hosting was treated as an optional extension rather than the primary evaluation requirement.
 
@@ -415,7 +415,6 @@ The current project has the following known limitations:
 - Minor visual inconsistencies that should be fixed;
 - Articles pages do not yet include a "Load more" button, as implemented on the gallery page;
 - the public hosted frontend requires a temporarily reachable Strapi API whenever a new remote build is needed;
-- gallery pagination requests the public Strapi API when a user loads additional images;
 - automatic Strapi-to-Cloudflare rebuild through a webhook has not yet been configured;
 - translated detail pages require safer fallback handling when a corresponding translated slug does not exist;
 - administration users are not automatically mapped to public Author profiles;

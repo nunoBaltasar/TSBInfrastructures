@@ -11,6 +11,8 @@ interface Props {
   authorName?: string;
   authorImage?: string;
   tags?: string[];
+  tagIds?: string[];
+  hidden?: boolean;
 }
 
 const {
@@ -23,6 +25,8 @@ const {
   authorName,
   authorImage,
   tags,
+  tagIds,
+  hidden,
 } = Astro.props as Props;
 
 const t = translations[getLocale(Astro.url.pathname)];
@@ -39,6 +43,8 @@ const t = translations[getLocale(Astro.url.pathname)];
   data-gallery-author={authorName ?? ''}
   data-gallery-author-image={authorImage ?? ''}
   data-gallery-tags={tags?.join('|') ?? ''}
+  data-gallery-tag-ids={tagIds?.join('|') ?? ''}
+  hidden={hidden}
   aria-label={`${t.galleryPage.enlarge}: ${title}`}
 >
   <img src={image} alt={title} loading="lazy" />
@@ -49,6 +55,10 @@ const t = translations[getLocale(Astro.url.pathname)];
 </button>
 
 <style>
+  :global(.galleryCard[hidden]) {
+    display: none !important;
+  }
+
   :global(.galleryCard) {
     position: relative;
     display: block;

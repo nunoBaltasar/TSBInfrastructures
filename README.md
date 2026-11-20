@@ -13,7 +13,7 @@ This README explains how to run the project in development, how to test it local
 
 To run the applications directly, install:
 
-- Node.js 24 LTS;
+- Node.js 24;
 - npm;
 - Git.
 
@@ -88,6 +88,18 @@ Do not add `/api` to `STRAPI_URL` because the frontend API helper already adds i
 ### Production-like backend environment
 
 The production Compose file reads a separate file named `backend.env` from the repository root. Create it from the backend example and adapt it:
+
+Linux or macOS:
+
+```bash
+cp backend/.env.example backend.env
+```
+
+Windows PowerShell:
+
+```powershell
+Copy-Item backend\.env.example backend.env
+```
 
 ```dotenv
 HOST=0.0.0.0
@@ -270,9 +282,12 @@ The workflow is defined in `.github/workflows/frontend-ci.yml`.
 
 A push to `main` that matches the workflow triggers automatically. It:
 
-1. installs frontend dependencies;
-2. runs `npm run build`;
-3. stores `frontend/dist` as a workflow artifact.
+1. installs backend dependencies;
+2. starts a temporary Strapi instance;
+3. waits for Strapi to become ready;
+4. installs frontend dependencies;
+5. runs `npm run build` using `http://127.0.0.1:1337`;
+6. stores `frontend/dist` as a workflow artifact.
 
 This workflow validates the frontend but does not publish the public website. The connected Cloudflare project performs the actual frontend build and deployment.
 
@@ -342,13 +357,13 @@ The Docker backend and the terminal running cloudflared must remain active while
 A Quick Tunnel normally receives a different URL whenever it is restarted. When this happens, update STRAPI_URL in
 the Cloudflare project settings, under Variables and Secrets.
 
-After changing STRAPI_URL, a new Cloudflare build is required because the previously generated static pages retain the old backend and media URLs.
+After changing `STRAPI_URL`, a new Cloudflare build is required because the previously generated static pages retain the build-time content and API configuration.
 
 If frontend code has changed, commit and push the changes to main. Cloudflare will automatically detect the push and start a new build.
 
 If only Strapi content has changed, such as an article, gallery image, author or tag, no Git commit is required. Until an automatic webhook is configured, a new Cloudflare build must be started manually.
 
-Keep the backend and Tunnel running until the Cloudflare deployment finishes. After the build is complete, the static pages remain available. 
+Keep the backend and Tunnel running until the Cloudflare deployment finishes. After the build is complete, the static pages, gallery data and locally synchronized media remain available even if the backend is stopped. Loading additional gallery pages and applying tag filters are handled locally in the browser, so they do not require `STRAPI_URL` to remain reachable.
 
 ## 6. Deploy the backend to a Linux server
 
@@ -358,6 +373,8 @@ The repository nevertheless includes `docker-compose.production.yml`, which is p
 
 ```bash
 docker login ghcr.io
+cp backend/.env.example backend.env
+# Edit backend.env and replace placeholder secrets
 docker compose -f docker-compose.production.yml pull
 docker compose -f docker-compose.production.yml up -d
 ```

@@ -25,7 +25,7 @@ const galleryImagesResponse = await fetchApi<
     'populate[tags]': 'true',
     sort: 'publishedAt:desc',
     'pagination[page]': '1',
-    'pagination[pageSize]': String(galleryPageSize),
+    'pagination[pageSize]': '100',
   },
 });
 const tagsResponse = await fetchApi<StrapiCollectionResponse<Tag>>({
@@ -42,8 +42,6 @@ const availableTags = tagsResponse.data.filter(
       (candidate.documentId ?? candidate.id) === (tag.documentId ?? tag.id),
     ) === index,
 );
-
-const strapiUrl = import.meta.env.STRAPI_URL;
 ---
 
 <BaseLayout title={`${t.galleryPage.title} | TravelBlog`}>
@@ -93,7 +91,6 @@ const strapiUrl = import.meta.env.STRAPI_URL;
       class="galleryGrid"
       aria-label={t.galleryPage.ariaLabel}
       data-gallery-grid
-      data-strapi-url={strapiUrl}
       data-locale={locale}
       data-page-size={galleryPageSize}
       data-page-count={galleryImagesResponse.meta.pagination.pageCount}
@@ -105,7 +102,7 @@ const strapiUrl = import.meta.env.STRAPI_URL;
       data-enlarge-text={t.galleryPage.enlarge}
       data-reduce-text={t.galleryPage.reduce}
     >
-      {galleryImagesResponse.data.map((galleryImage) =>
+      {galleryImagesResponse.data.map((galleryImage, index) =>
         galleryImage.image ? (
           <GalleryCard
             title={galleryImage.title}
@@ -114,6 +111,7 @@ const strapiUrl = import.meta.env.STRAPI_URL;
             publishedAt={galleryImage.publishedAt}
             authorName={galleryImage.author?.name}
             tags={galleryImage.tags?.map((tag) => tag.name)}
+            tagIds={galleryImage.tags?.map((tag) => tag.documentId)}
             authorImage={galleryImage.author?.profileImage
               ? getMediaUrl(
                   galleryImage.author.profileImage.formats?.thumbnail?.url ??
@@ -126,6 +124,7 @@ const strapiUrl = import.meta.env.STRAPI_URL;
                 galleryImage.image.formats?.medium?.url ??
                 galleryImage.image.url
             )}
+            hidden={index >= galleryPageSize}
           />
         ) : null
       )}
@@ -172,7 +171,7 @@ const strapiUrl = import.meta.env.STRAPI_URL;
       </div>
     </dialog>
 
-    {galleryImagesResponse.data.length > 0 && (
+    {galleryImagesResponse.data.length > galleryPageSize && (
       <div class="galleryLoadMore">
         <button type="button" class="galleryLoadMoreButton" data-gallery-load-more>
           {t.galleryPage.loadMore}
@@ -183,201 +182,6 @@ const strapiUrl = import.meta.env.STRAPI_URL;
 </BaseLayout>
 
 <script>
-  import { getMediaUrl } from '../../lib/media';
-
-  interface GalleryMediaFormat {
-    url: string;
-  }
-
-  interface GalleryMedia {
-    url: string;
-    formats?: Record<string, GalleryMediaFormat>;
-  }
-
-  interface GalleryApiImage {
-    id?: number;
-    documentId?: string;
-    title: string;
-    slug: string;
-    description?: string;
-    location?: string;
-    publishedAt: string;
-    tags?: {
-      name: string;
-    }[] | null;
-    author?: {
-      name: string;
-      profileImage?: {
-        url: string;
-        alternativeText?: string | null;
-        formats?: Record<string, GalleryMediaFormat>;
-      } | null;
-    } | null;
-    image: GalleryMedia | null;
-  }
-
-  interface GalleryApiResponse {
-    data: GalleryApiImage[];
-    meta: {
-      pagination: {
-        page: number;
-        pageCount: number;
-        pageSize: number;
-        total: number;
-      };
-    };
-  }
-
-  const loadGalleryPage = async (
-    strapiUrl: string,
-    page: number,
-    pageSize: number,
-    locale: string,
-    tagDocumentId = '',
-  ): Promise<GalleryApiResponse> => {
-    const getPage = async (selectedLocale: string): Promise<GalleryApiResponse> => {
-      const query = new URLSearchParams({
-        locale: selectedLocale,
-        'populate[image]': 'true',
-        'populate[author][populate][0]': 'profileImage',
-        'populate[tags]': 'true',
-        sort: 'publishedAt:desc',
-        'pagination[page]': String(page),
-        'pagination[pageSize]': String(pageSize),
-      });
-      if (tagDocumentId) {
-        query.set('filters[tags][documentId][$eq]', tagDocumentId);
-      }
-      const response = await fetch(`${strapiUrl}/api/gallery-images?${query}`);
-
-      if (!response.ok) {
-        throw new Error(`Gallery request failed with status ${response.status}`);
-      }
-
-      return response.json() as Promise<GalleryApiResponse>;
-    };
-
-    const selectedLocale = locale === 'pt' ? 'pt' : 'en';
-    const fallbackLocale = selectedLocale === 'pt' ? 'en' : 'pt';
-    const [selectedResponse, fallbackResponse] = await Promise.all([
-      getPage(selectedLocale),
-      getPage(fallbackLocale),
-    ]);
-
-    const selectedItems = Array.isArray(selectedResponse.data)
-      ? selectedResponse.data
-      : [];
-    const fallbackItems = Array.isArray(fallbackResponse.data)
-      ? fallbackResponse.data
-      : [];
-    const selectedByKey = new Map(
-      selectedItems.map((item) => [item.documentId ?? item.id, item]),
-    );
-    const fallbackByKey = new Map(
-      fallbackItems.map((item) => [item.documentId ?? item.id, item]),
-    );
-    const mergedItems = selectedItems.map((selectedItem) => {
-      const key = selectedItem.documentId ?? selectedItem.id;
-      const fallbackItem = fallbackByKey.get(key);
-
-      if (!fallbackItem) {
-        return selectedItem;
-      }
-
-      const mergedItem = { ...fallbackItem, ...selectedItem };
-      Object.entries(fallbackItem).forEach(([field, fallbackValue]) => {
-        const selectedValue = selectedItem[field as keyof GalleryApiImage];
-        const isMissing =
-          selectedValue === null ||
-          selectedValue === undefined ||
-          (Array.isArray(selectedValue) && selectedValue.length === 0);
-
-        if (isMissing && fallbackValue !== null && fallbackValue !== undefined) {
-          (mergedItem as Record<string, unknown>)[field] = fallbackValue;
-        }
-      });
-
-      return mergedItem;
-    });
-
-    fallbackItems.forEach((fallbackItem) => {
-      const key = fallbackItem.documentId ?? fallbackItem.id;
-      if (!selectedByKey.has(key)) {
-        mergedItems.push(fallbackItem);
-      }
-    });
-
-    const selectedPagination = selectedResponse.meta.pagination;
-    const fallbackPagination = fallbackResponse.meta.pagination;
-
-    return {
-      data: mergedItems,
-      meta: {
-        pagination: {
-          page,
-          pageSize,
-          pageCount: Math.max(
-            selectedPagination.pageCount,
-            fallbackPagination.pageCount,
-          ),
-          total: Math.max(
-            selectedPagination.total,
-            fallbackPagination.total,
-          ),
-        },
-      },
-    };
-  };
-
-  const createGalleryCard = (
-    galleryImage: GalleryApiImage,
-    strapiUrl: string,
-    enlargeText: string,
-  ): HTMLButtonElement | null => {
-    if (!galleryImage.image) {
-      return null;
-    }
-
-    const imageUrl =
-      galleryImage.image.formats?.large?.url ??
-      galleryImage.image.formats?.medium?.url ??
-      galleryImage.image.url;
-    const card = document.createElement('button');
-    card.className = 'galleryCard';
-    card.type = 'button';
-    card.setAttribute('aria-label', `${enlargeText}: ${galleryImage.title}`);
-    card.dataset.galleryImage = getMediaUrl(imageUrl);
-    card.dataset.galleryTitle = galleryImage.title;
-    card.dataset.galleryDescription = galleryImage.description ?? '';
-    card.dataset.galleryLocation = galleryImage.location ?? '';
-    card.dataset.galleryPublished = galleryImage.publishedAt;
-    card.dataset.galleryTags = Array.isArray(galleryImage.tags)
-      ? galleryImage.tags.map((tag) => tag.name).join('|')
-      : '';
-    card.dataset.galleryAuthor = galleryImage.author?.name ?? '';
-    const authorImageUrl = galleryImage.author?.profileImage
-      ? galleryImage.author.profileImage.formats?.thumbnail?.url ??
-        galleryImage.author.profileImage.url
-      : '';
-    card.dataset.galleryAuthorImage = authorImageUrl
-      ? getMediaUrl(authorImageUrl)
-      : '';
-
-    const image = document.createElement('img');
-    image.src = card.dataset.galleryImage;
-    image.alt = galleryImage.title;
-    image.loading = 'lazy';
-
-    const overlay = document.createElement('div');
-    overlay.className = 'galleryCardOverlay';
-
-    const title = document.createElement('h2');
-    title.textContent = galleryImage.title;
-
-    overlay.append(title);
-    card.append(image, overlay);
-    return card;
-  };
 
   const initializeGallery = () => {
     const grid = document.querySelector<HTMLElement>('[data-gallery-grid]');
@@ -392,30 +196,15 @@ const strapiUrl = import.meta.env.STRAPI_URL;
       return;
     }
 
-    const strapiUrl = grid.dataset.strapiUrl;
-    const locale = grid.dataset.locale ?? 'pt';
     const loadMoreText = grid.dataset.loadMoreText ?? 'Load more';
-    const loadingText = grid.dataset.loadingText ?? 'Loading more photos...';
-    const loadErrorText =
-      grid.dataset.loadErrorText ?? 'Unable to load more photos. Try again.';
-    const publishedOnText = grid.dataset.publishedOnText ?? 'Published on';
-    const byText = grid.dataset.byText ?? 'By';
-    const enlargeText = grid.dataset.enlargeText ?? 'Enlarge image';
-    const reduceText = grid.dataset.reduceText ?? 'Reduce image';
     const pageSize = Number(grid.dataset.pageSize);
-    const pageCount = Number(grid.dataset.pageCount);
 
-    if (
-      !strapiUrl ||
-      !Number.isInteger(pageSize) ||
-      !Number.isInteger(pageCount)
-    ) {
+    if (!Number.isInteger(pageSize)) {
       return;
     }
 
-    let currentPage = 1;
-    let isLoading = false;
     let selectedTagDocumentId = '';
+    let visibleCards: HTMLButtonElement[] = [];
 
     filterButton.addEventListener('click', () => {
       const isOpen = filterButton.getAttribute('aria-expanded') === 'true';
@@ -423,119 +212,80 @@ const strapiUrl = import.meta.env.STRAPI_URL;
       filterOptions.hidden = isOpen;
     });
 
+    const applyFilter = () => {
+      const allCards =
+        Array.from(
+          grid.querySelectorAll<HTMLButtonElement>('[data-gallery-image]'),
+        );
+
+      visibleCards = allCards.filter((card) => {
+        if (!selectedTagDocumentId) {
+          return true;
+        }
+
+        const tagIds =
+          card.dataset.galleryTagIds?.split('|').filter(Boolean) ?? [];
+        return tagIds.includes(selectedTagDocumentId);
+      });
+
+      allCards.forEach((card) => {
+        card.hidden = true;
+      });
+
+      visibleCards.slice(0, pageSize).forEach((card) => {
+        card.hidden = false;
+      });
+
+      loadMoreButton.hidden = visibleCards.length <= pageSize;
+      loadMoreButton.textContent = loadMoreText;
+    };
+
     filterOptions.querySelectorAll<HTMLButtonElement>('[data-gallery-tag]').forEach(
       (tagOption) => {
-        tagOption.addEventListener('click', async () => {
-          if (isLoading) {
-            return;
-          }
-
+        tagOption.addEventListener('click', () => {
           selectedTagDocumentId = tagOption.dataset.galleryTag ?? '';
           filterButton.textContent =
             tagOption.dataset.galleryTagName ?? loadMoreText;
           filterButton.setAttribute('aria-expanded', 'false');
           filterOptions.hidden = true;
-
-          isLoading = true;
-          grid.replaceChildren();
-          loadMoreButton.disabled = true;
-          loadMoreButton.textContent = loadingText;
-          loadMoreButton.hidden = false;
-          loadMoreButton.setAttribute('aria-busy', 'true');
-
-          try {
-            const response = await loadGalleryPage(
-              strapiUrl,
-              1,
-              pageSize,
-              locale,
-              selectedTagDocumentId,
-            );
-            const cards = response.data
-              .map((galleryImage) =>
-                createGalleryCard(galleryImage, strapiUrl, enlargeText),
-              )
-              .filter((card): card is HTMLButtonElement => card !== null);
-
-            grid.append(...cards);
-            currentPage = 1;
-            const filteredPageCount =
-              Number(response.meta?.pagination?.pageCount) || 1;
-
-            loadMoreButton.hidden =
-              cards.length === 0 || currentPage >= filteredPageCount;
-          } catch (error) {
-            console.error('Unable to filter gallery photos.', error);
-            loadMoreButton.textContent = loadErrorText;
-          } finally {
-            isLoading = false;
-            loadMoreButton.disabled = false;
-            loadMoreButton.removeAttribute('aria-busy');
-            if (!loadMoreButton.hidden) {
-              loadMoreButton.textContent = loadMoreText;
-            }
-          }
+          applyFilter();
         });
       },
     );
 
-    loadMoreButton.addEventListener('click', async () => {
-      if (isLoading) {
+    loadMoreButton.addEventListener('click', () => {
+      if (visibleCards.length === 0) {
+        visibleCards =
+          Array.from(
+            grid.querySelectorAll<HTMLButtonElement>('[data-gallery-image]'),
+          ).filter((card) => {
+            if (!selectedTagDocumentId) {
+              return true;
+            }
+            const tagIds =
+              card.dataset.galleryTagIds?.split('|').filter(Boolean) ?? [];
+            return tagIds.includes(selectedTagDocumentId);
+          });
+      }
+
+      const visibleCount =
+        visibleCards.filter((card) => !card.hidden).length;
+      visibleCards
+        .slice(visibleCount, visibleCount + pageSize)
+        .forEach((card) => {
+          card.hidden = false;
+        });
+
+      const updatedVisibleCount =
+        visibleCards.filter((card) => !card.hidden).length;
+
+      if (updatedVisibleCount >= visibleCards.length) {
+        loadMoreButton.hidden = true;
         return;
       }
-
-      isLoading = true;
-      loadMoreButton.disabled = true;
-      loadMoreButton.textContent = loadingText;
-      loadMoreButton.setAttribute('aria-busy', 'true');
-
-      try {
-        const nextPage = currentPage + 1;
-        const response = await loadGalleryPage(
-          strapiUrl,
-          nextPage,
-          pageSize,
-          locale,
-          selectedTagDocumentId,
-        );
-        const cards = response.data
-          .map((galleryImage) =>
-            createGalleryCard(galleryImage, strapiUrl, enlargeText),
-          )
-          .filter((card): card is HTMLButtonElement => card !== null);
-
-        if (cards.length === 0) {
-          loadMoreButton.hidden = true;
-          return;
-        }
-
-        grid.append(...cards);
-        currentPage = nextPage;
-        const loadedCardCount =
-          grid.querySelectorAll<HTMLElement>('[data-gallery-image]').length;
-        const totalCardCount =
-          Number(response.meta?.pagination?.total) || loadedCardCount;
-
-        if (loadedCardCount >= totalCardCount) {
-          loadMoreButton.hidden = true;
-        }
-      } catch (error) {
-        console.error('Unable to load more gallery photos.', error);
-        loadMoreButton.textContent = loadErrorText;
-      } finally {
-        isLoading = false;
-        loadMoreButton.disabled = false;
-        loadMoreButton.removeAttribute('aria-busy');
-
-        if (loadMoreButton.isConnected) {
-          window.setTimeout(() => {
-            if (loadMoreButton.isConnected && !isLoading) {
-              loadMoreButton.textContent = loadMoreText;
-            }
-          }, loadMoreButton.textContent === loadErrorText ? 3000 : 0);
-        }
-      }
     });
+
+    applyFilter();
   };
 
   const initializeGalleryDialog = () => {
